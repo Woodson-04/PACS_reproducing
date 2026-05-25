@@ -16,7 +16,6 @@
 
 data/
 raw_data/
-results/
 output/
 outputs/
 .cache/
