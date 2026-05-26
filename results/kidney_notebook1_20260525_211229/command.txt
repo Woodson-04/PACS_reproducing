@@ -1,0 +1,7 @@
+cd /home/woodson/PACS_reproducing
+Rscript q.r \
+  --data_dir /home/woodson/biostatistic/pacs/PACS_data \
+  --n_repeat 1 \
+  --n_cell_sample 50 \
+  --n_features_sample 100 \
+  --run_baselines FALSE

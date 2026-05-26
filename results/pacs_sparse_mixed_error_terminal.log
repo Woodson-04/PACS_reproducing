@@ -1,0 +1,255 @@
+2026-05-26 09:26:05 | Starting PACS kidney Notebook 1 reproduction 
+2026-05-26 09:26:05 | Output directory: /home/woodson/PACS_reproducing/results/kidney_notebook1_20260526_092605 
+2026-05-26 09:26:05 | Data directory: /home/woodson/biostatistic/pacs/PACS_data 
+2026-05-26 09:26:34 | Original pmats dim (cells x peaks): 14458 x 300755 
+2026-05-26 09:27:19 | PT-only p_by_c dim after filtering: 120050 x 6308 
+2026-05-26 09:27:19 | Actual PT p_by_c1 dim after filtering: 140549 x 6308 
+2026-05-26 09:27:19 | Actual LOH p_by_c2 dim after filtering: 140549 x 2341 
+2026-05-26 09:27:19 | run_baselines is FALSE; running PACS only. 
+2026-05-26 09:27:21 | Repeat 1 / 1 
+2026-05-26 09:27:23 | Calling PACS safe wrapper permuted repeat 1: dim=100 x 100, rownames=100, colnames=100, meta_rows=100, cap_rates=100 
+2026-05-26 09:27:23 | PACS safe split permuted repeat 1: 20 peaks routed to pacs_test_cumu, 80 peaks routed to pacs_test_logit 
+2026-05-26 09:27:23 | Calling pacs_test_cumu permuted repeat 1 with args: covariate_meta.data, formula_full, formula_null, pic_matrix, cap_rates 
+parameter_estimation: 3.108 sec elapsed
+[1] "2000 regions fail to converge, try newton"
+V1 V2 V3 V4 V5 V6 
+ 1  2  3  4  5  6 
+newton method for estimation: 2.727 sec elapsed
+[1] "1716 regions fail to converge aftere newton"
+running parameter_estimation: 2.351 sec elapsed
+[1] "2000 regions fail to converge, try newton"
+V1 V2 V3 V4 V5 V6 
+ 1  2  3  4  5  6 
+newton method for estimation: 2.709 sec elapsed
+[1] "1716 regions fail to converge aftere newton"
+错误于h(simpleError(msg, call)): 
+  在为函数“colSums”选择方法时计算参数“x”时出错：非整合陈列
+Calls: pacs_test_sparse_safe ... compare_models -> colSums -> .handleSimpleError -> h
+9: (function () 
+   {
+       traceback(2)
+       q(status = 1)
+   })()
+8: h(simpleError(msg, call))
+7: .handleSimpleError(function (cond) 
+   .Internal(C_tryCatchHelper(addr, 1L, cond)), "非整合陈列", 
+       base::quote(c_by_r * log_pq))
+6: colSums(c_by_r * log_pq + (1 - c_by_r) * log_1_pq)
+5: compare_models(x_full = X_full, theta_estimated_full = full_para, 
+       x_null = X_full, theta_estimated_null = null_para, q_vec = cap_rates, 
+       c_by_r = t(pic_matrix), df_test = length(index_poi), mc.cores = n_cores)
+4: (function (covariate_meta.data, formula_full, formula_null, pic_matrix, 
+       max_T = 2, cap_rates, par_initial_null = NULL, par_initial_full = NULL, 
+       n_cores = 1) 
+   {
+       X_full <- model.matrix(formula_full, data = covariate_meta.data)
+       X_null <- model.matrix(formula_null, data = covariate_meta.data)
+       X_full_beta <- X_full[, 2:ncol(X_full), drop = FALSE]
+       X_full_beta <- replicate(max_T, X_full_beta, simplify = FALSE)
+       X_full_stacked <- do.call(rbind, X_full_beta)
+       colnames(X_full_stacked) <- colnames(X_full)[2:ncol(X_full)]
+       A <- diag(nrow = max_T, ncol = max_T)
+       X_alpha <- A[rep(seq_len(nrow(A)), each = nrow(X_full)), 
+           ]
+       colnames(X_alpha) <- paste("intersection_", 1:max_T, sep = "")
+       X_full <- cbind(X_alpha, X_full_stacked)
+       if (ncol(X_null) != 1) {
+           X_null_beta <- X_null[, 2:ncol(X_null), drop = FALSE]
+           X_null_beta <- replicate(max_T, X_null_beta, simplify = FALSE)
+           X_null_stacked <- do.call(rbind, X_null_beta)
+           colnames(X_null_stacked) <- colnames(X_null)[2:ncol(X_null)]
+           X_null <- cbind(X_alpha, X_null_stacked)
+       }
+       else {
+           X_null <- X_alpha
+       }
+       pars_of_interest <- setdiff(colnames(X_full), colnames(X_null))
+       X_full <- X_full[, c(colnames(X_null), pars_of_interest)]
+       index_poi <- which(colnames(X_full) %in% pars_of_interest)
+       n_para_full <- dim(X_full)[2]
+       if (is.null(par_initial_full)) {
+           par_initial_full <- rep.int(0.05, n_para_full)
+       }
+       else if (length(par_initial_full) != n_para_full) {
+           par_initial_full <- rep(par_initial_full[1], times = n_para_full)
+       }
+       if (is.null(par_initial_null)) {
+           par_initial_null <- par_initial_full
+       }
+       else if (length(par_initial_null) != n_para_full) {
+           par_initial_null <- rep(par_initial_null[1], times = n_para_full)
+       }
+       par_initial_null[!(colnames(X_full) %in% colnames(X_null))] <- 0
+       pic_cumu <- rep(list(), length = max_T)
+       for (t in 1:max_T) {
+           pic_cumu[[t]] <- ifelse(pic_matrix >= t, 1, 0)
+       }
+       pic_matrix <- do.call(cbind, pic_cumu)
+       null_para <- estimate_parameters_null(r_by_c = pic_matrix, 
+           design_mat = X_full, par_initial = par_initial_null, 
+           hold_zero = index_poi, cap_rate_vec = cap_rates, mc.cores = n_cores)
+       full_para <- estimate_parameters(r_by_c = pic_matrix, design_mat = X_full, 
+           par_initial = par_initial_full, cap_rate_vec = cap_rates, 
+           mc.cores = n_cores)
+       conv_mat <- c(null_para[dim(null_para)[1], ], full_para[dim(full_para)[1], 
+           ])
+       null_para <- null_para[1:(dim(null_para)[1] - 1), , drop = FALSE]
+       full_para <- full_para[1:(dim(full_para)[1] - 1), , drop = FALSE]
+       pacs_p_val <- compare_models(x_full = X_full, theta_estimated_full = full_para, 
+           x_null = X_full, theta_estimated_null = null_para, q_vec = cap_rates, 
+           c_by_r = t(pic_matrix), df_test = length(index_poi), 
+           mc.cores = n_cores)
+       names(pacs_p_val) <- rownames(pic_matrix)
+       return(list(pacs_converged = conv_mat, pacs_p_val = pacs_p_val))
+   })(covariate_meta.data = list(group = c(0, 0, 0, 0, 0, 0, 0, 
+   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+   0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
+   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
+   1, 1, 1, 1, 1, 1, 1, 1, 1)), formula_full = ~factor(group), formula_null = ~1, 
+       pic_matrix = new("dgCMatrix", i = c(0L, 4L, 5L, 15L, 0L, 
+       2L, 3L, 4L, 8L, 10L, 15L, 0L, 10L, 11L, 19L, 7L, 10L, 13L, 
+       14L, 0L, 2L, 12L, 13L, 14L, 0L, 2L, 5L, 10L, 12L, 14L, 15L, 
+       16L, 19L, 2L, 3L, 12L, 14L, 19L, 0L, 4L, 12L, 17L, 0L, 3L, 
+       14L, 3L, 10L, 15L, 3L, 7L, 13L, 14L, 18L, 19L, 0L, 3L, 0L, 
+       3L, 14L, 16L, 17L, 0L, 3L, 4L, 5L, 10L, 11L, 12L, 14L, 5L, 
+       0L, 2L, 4L, 5L, 10L, 14L, 15L, 17L, 19L, 0L, 2L, 3L, 7L, 
+       9L, 10L, 11L, 12L, 14L, 16L, 17L, 0L, 16L, 17L, 3L, 4L, 7L, 
+       10L, 14L, 16L, 17L, 19L, 0L, 10L, 12L, 0L, 2L, 10L, 11L, 
+       14L, 16L, 19L, 3L, 7L, 8L, 11L, 19L, 0L, 2L, 3L, 5L, 7L, 
+       10L, 12L, 13L, 14L, 19L, 3L, 7L, 19L, 0L, 4L, 5L, 13L, 14L, 
+       16L, 17L, 10L, 0L, 2L, 4L, 10L, 12L, 14L, 0L, 5L, 14L, 0L, 
+       2L, 5L, 7L, 10L, 13L, 16L, 17L, 19L, 3L, 7L, 10L, 13L, 14L, 
+       0L, 2L, 14L, 19L, 0L, 2L, 11L, 14L, 15L, 19L, 2L, 3L, 4L, 
+       5L, 10L, 13L, 14L, 16L, 19L, 14L, 4L, 13L, 14L, 16L, 19L, 
+       0L, 2L, 14L, 16L, 0L, 5L, 12L, 13L, 14L, 16L, 19L, 0L, 2L, 
+       5L, 10L, 13L, 14L, 19L, 3L, 4L, 5L, 8L, 10L, 11L, 12L, 13L, 
+       1L, 13L, 2L, 3L, 12L, 15L, 16L, 0L, 3L, 4L, 5L, 7L, 10L, 
+       14L, 16L, 19L, 2L, 3L, 7L, 16L, 10L, 2L, 10L, 14L, 2L, 7L, 
+       13L, 0L, 7L, 15L, 3L, 3L, 4L, 13L, 14L, 16L, 17L, 19L, 0L, 
+       3L, 10L, 12L, 13L, 15L, 17L, 19L, 0L, 10L, 19L, 0L, 11L, 
+       0L, 4L, 6L, 10L, 11L, 14L, 4L, 7L, 14L, 17L, 3L, 13L, 14L, 
+       19L, 2L, 3L, 4L, 7L, 14L, 16L, 17L, 10L, 0L, 2L, 13L, 16L, 
+       19L, 7L, 19L, 10L, 14L, 19L, 2L, 5L, 10L, 17L, 3L, 4L, 5L, 
+       10L, 13L, 14L, 17L, 5L, 11L, 14L, 16L, 11L, 14L, 16L, 0L, 
+       3L, 4L, 5L, 7L, 10L, 11L, 12L, 14L, 19L, 2L, 3L, 4L, 5L, 
+       10L, 12L, 13L, 10L, 3L, 8L, 14L, 19L, 0L, 2L, 3L, 4L, 5L, 
+       7L, 10L, 11L, 12L, 14L, 16L, 19L, 3L, 7L, 10L, 0L, 3L, 5L, 
+       12L, 13L, 16L, 19L, 0L, 3L, 0L, 10L, 0L, 2L, 3L, 6L, 13L, 
+       14L, 16L, 19L, 10L, 13L, 15L, 0L, 0L, 2L, 5L, 11L, 13L, 14L, 
+       16L, 19L, 3L, 10L, 0L, 3L, 19L, 0L, 3L, 5L, 10L, 15L, 19L, 
+       0L, 7L, 10L, 13L, 14L, 15L, 16L, 19L, 0L, 1L, 2L, 13L, 17L, 
+       19L, 10L, 19L, 0L, 3L, 14L, 19L, 0L, 3L, 7L, 13L, 14L, 16L, 
+       17L, 0L, 2L, 3L, 7L, 10L, 11L, 13L, 14L, 16L, 19L, 0L, 3L, 
+       4L, 5L, 10L, 19L, 0L, 2L, 12L, 13L, 15L, 16L, 19L, 0L, 12L, 
+       13L, 14L, 17L, 6L, 14L, 15L, 19L, 3L), p = c(0L, 4L, 11L, 
+       15L, 19L, 24L, 33L, 38L, 42L, 45L, 48L, 54L, 56L, 61L, 69L, 
+       70L, 79L, 90L, 93L, 101L, 104L, 111L, 116L, 126L, 129L, 136L, 
+       137L, 143L, 146L, 155L, 160L, 164L, 170L, 179L, 180L, 185L, 
+       189L, 196L, 203L, 211L, 213L, 218L, 218L, 227L, 231L, 232L, 
+       234L, 235L, 238L, 241L, 242L, 249L, 257L, 260L, 262L, 268L, 
+       269L, 272L, 276L, 283L, 284L, 289L, 289L, 291L, 294L, 298L, 
+       305L, 309L, 312L, 322L, 322L, 322L, 329L, 330L, 330L, 334L, 
+       346L, 349L, 356L, 358L, 360L, 368L, 371L, 372L, 380L, 382L, 
+       385L, 391L, 399L, 405L, 407L, 411L, 418L, 428L, 430L, 434L, 
+       441L, 446L, 449L, 450L, 451L), Dim = c(20L, 100L), Dimnames = list(
+           c("f_2", "f_4", "f_8", "f_9", "f_18", "f_20", "f_25", 
+           "f_31", "f_35", "f_40", "f_61", "f_65", "f_66", "f_76", 
+           "f_77", "f_83", "f_85", "f_90", "f_94", "f_100"), c("c_1", 
+           "c_2", "c_3", "c_4", "c_5", "c_6", "c_7", "c_8", "c_9", 
+           "c_10", "c_11", "c_12", "c_13", "c_14", "c_15", "c_16", 
+           "c_17", "c_18", "c_19", "c_20", "c_21", "c_22", "c_23", 
+           "c_24", "c_25", "c_26", "c_27", "c_28", "c_29", "c_30", 
+           "c_31", "c_32", "c_33", "c_34", "c_35", "c_36", "c_37", 
+           "c_38", "c_39", "c_40", "c_41", "c_42", "c_43", "c_44", 
+           "c_45", "c_46", "c_47", "c_48", "c_49", "c_50", "c_51", 
+           "c_52", "c_53", "c_54", "c_55", "c_56", "c_57", "c_58", 
+           "c_59", "c_60", "c_61", "c_62", "c_63", "c_64", "c_65", 
+           "c_66", "c_67", "c_68", "c_69", "c_70", "c_71", "c_72", 
+           "c_73", "c_74", "c_75", "c_76", "c_77", "c_78", "c_79", 
+           "c_80", "c_81", "c_82", "c_83", "c_84", "c_85", "c_86", 
+           "c_87", "c_88", "c_89", "c_90", "c_91", "c_92", "c_93", 
+           "c_94", "c_95", "c_96", "c_97", "c_98", "c_99", "c_100"
+           )), x = c(1, 1, 1, 2, 2, 2, 2, 2, 1, 2, 2, 1, 1, 1, 1, 
+       1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 5, 2, 2, 3, 1, 2, 1, 
+       2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 2, 
+       1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 
+       1, 1, 4, 2, 2, 2, 3, 2, 2, 1, 1, 2, 1, 1, 1, 3, 2, 1, 1, 
+       1, 2, 4, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 
+       2, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 2, 1, 1, 3, 2, 1, 1, 1, 
+       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 2, 1, 1, 1, 2, 1, 
+       2, 1, 1, 6, 1, 1, 1, 2, 2, 1, 1, 2, 1, 1, 3, 1, 1, 2, 1, 
+       1, 1, 1, 1, 2, 2, 2, 2, 1, 4, 1, 2, 2, 1, 1, 1, 1, 2, 1, 
+       2, 2, 2, 1, 1, 1, 1, 3, 1, 2, 1, 2, 2, 2, 1, 2, 2, 4, 2, 
+       1, 4, 3, 1, 1, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2, 1, 3, 1, 2, 
+       2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 3, 1, 1, 1, 1, 1, 
+       1, 1, 1, 3, 2, 1, 3, 3, 2, 3, 2, 1, 1, 1, 1, 1, 2, 1, 2, 
+       2, 1, 2, 2, 2, 1, 1, 1, 1, 1, 2, 1, 2, 2, 3, 3, 1, 1, 1, 
+       1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 
+       1, 4, 2, 2, 1, 1, 1, 2, 1, 1, 2, 1, 1, 3, 3, 3, 3, 1, 1, 
+       1, 2, 3, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 4, 2, 3, 4, 1, 
+       2, 2, 8, 1, 3, 2, 1, 1, 1, 1, 1, 4, 1, 1, 1, 3, 2, 3, 1, 
+       1, 1, 1, 1, 1, 2, 1, 1, 3, 2, 1, 2, 1, 1, 1, 1, 1, 2, 2, 
+       1, 3, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 1, 4, 1, 4, 
+       1, 1, 1, 1, 2, 2, 3, 2, 2, 1, 1, 1, 1, 1, 2, 1, 1, 2, 2, 
+       1, 2, 1, 1, 1, 1, 3, 2, 2, 1, 3, 4, 1, 1, 1, 1, 1, 1, 1, 
+       1, 1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1), factors = list()), 
+       cap_rates = c(`TGATGCAGTCTGGGCT-1` = 0.310226107944539, `CTCAGCTAGATGTTCC-1` = 0.525144881424696, 
+       `GTTCAAGGTCACTCTC-1` = 0.377998580757038, `CTTGTCGAGTGAACCG-1` = 0.249722838608137, 
+       `GCACCTTTCGGCTATA-1` = 0.357365791092561, `AATACGCTCCCTACCA-1` = 0.802549434280192, 
+       `TACATTCAGATAGGTT-1` = 0.277477979153234, `GAACCGCTCCGTGCGA-1` = 0.460970297201376, 
+       `TAGCATGGTCTGTGTA-1` = 0.302002362597843, `GTGTGATGTTCAGTAC-1` = 0.154342077846017, 
+       `GCACGCACATGCCTTC-1` = 0.44342141204191, `CCGTACTCAGTTAAAG-1` = 0.4037712112632, 
+       `TACAGCACACCCTTAC-1` = 0.373960134381429, `TACAGCAGTAAACGAT-1` = 0.401568422331049, 
+       `GGGTGTCGTGTACGCC-1` = 0.321827462987199, `TTCAACTCAAACCGAG-1` = 0.76297265979922, 
+       `AGTGTACGTAACAATG-1` = 0.600259984011031, `ATTGTCTAGACTAGGC-1` = 0.36412101048449, 
+       `ATAGGCTAGGTCCTCG-1` = 0.836252104942096, `CTGAATGGTCAGCAAG-1` = 0.32131347890303, 
+       `CCAGAATAGACACTTC-1` = 0.400467027864974, `TTGGTCCCAACGTAGG-1` = 0.378072007054777, 
+       `ACTAGGTAGTGAGTTA-1` = 0.790654374046579, `AACCAACAGTTCCAGT-1` = 0.144209248758124, 
+       `TGCCTGTTCTTTATCG-1` = 0.631539586847569, `TACTCGCAGTGAGTGC-1` = 0.303103757063919, 
+       `AGGCGAACATTACCTT-1` = 0.486008664730155, `GGTCATAAGTGCTGAG-1` = 0.235624989442373, 
+       `GGAGGATGTAGCATGG-1` = 0.398925075612469, `TGTGTCCAGGATTTGA-1` = 0.479326871635964, 
+       `CAGCTGGCATGGTTTG-1` = 0.272631843502502, `TCCGACTCAAATGCTC-1` = 0.351124555784801, 
+       `GCTCCTATCTTCAGAG-1` = 0.821126287607995, `TGCATTTCAAGGAACC-1` = 0.339449774444403, 
+       `GGGTTATGTGAATACA-1` = 0.515672889016449, `CACTGAATCGATGTGT-1` = 0.373299297701784, 
+       `CTGCTCAAGCTACGTT-1` = 0.978552269959022, `TCAGTCCGTAAGTCTC-1` = 0.492543605228868, 
+       `AACTGGTAGATGAGGA-1` = 0.799979513859349, `TGCATGACACCACAGC-1` = 0.0990520756490374, 
+       `CAAGAAATCCGTGCGA-1` = 0.347746946088837, `CCCTCTCCAAACAGTA-1` = 0.0519858187987535, 
+       `GGAGAACTCTATCTCA-1` = 0.803136844662099, `TGTAGCATCGATGCAT-1` = 0.614064127985841, 
+       `CATGCCTCAACGGACA-1` = 0.0583004804042518, `TCAGGGCAGTCATCTG-1` = 0.298184195115449, 
+       `ATTACTCGTTAGGAGC-1` = 0.145824627308368, `AACAAAGCATCAGCTA-1` = 0.204785944392265, 
+       `CTCTACGAGGGCATTG-1` = 0.239957141008936, `GCCTAGGAGTGCAACG-1` = 0.132387614822249, 
+       `TTTGCGCAGTTAGCAA-1` = 0.429250136578408, `GCGTTGGAGGTCGTTT-1` = 0.619791379209433, 
+       `TCAGGTAGTTCCTATT-1` = 0.317789016611589, `ATCCAGAGTGACGCAA-1` = 0.410599856952867, 
+       `TTCAACTAGACCATAA-1` = 0.67339257655843, `CCTATTATCTACATCT-1` = 0.0867898839267325, 
+       `GGAGTAGAGTTAGAGT-1` = 0.213229968632175, `GAGCATTTCCTGTAGA-1` = 0.209338374852043, 
+       `CTCAGAAAGCGTATCT-1` = 0.68499393160109, `AATGGCTCACCCTTTG-1` = 0.112121956646464, 
+       `GGGTGTCTCACTAGCA-1` = 0.275054911327868, `TTTACGTAGTGCTCGC-1` = 0.157572834946504, 
+       `GCTGAGCGTTCATTTC-1` = 0.206254470347032, `AGGACGACATAAAGTG-1` = 0.264334671858069, 
+       `CATTCCGCATGTAGAA-1` = 0.230264869707473, `TTGCTTACAGACTAAA-1` = 0.516554004589309, 
+       `TCACAAGAGCGTAGCA-1` = 0.35428188658755, `GGCACGTCAATTCAGC-1` = 0.280561883658245, 
+       `CCTAAAGAGGTTTCTG-1` = 0.675815644383795, `CCCGTTAAGGCGATTG-1` = 0.266170329301527, 
+       `GAAAGTACAACATAAG-1` = 0.312942880960858, `TTACGTTCAGATACAA-1` = 0.302296067788797, 
+       `CGCTGGAAGGGTAGTC-1` = 0.0816500430850479, `TTTGCGCCACAGTTCA-1` = 0.0943527925937828, 
+       `TGCACCTCACTGAAGG-1` = 0.418162765619917, `CCACAGGTCAAACCCA-1` = 0.999, 
+       `GCAACCGCATCCCGGA-1` = 0.475582130451308, `CCCTAACTCCGGAAAG-1` = 0.709444888747961, 
+       `CAAAGCTTCGTCCCAT-1` = 0.280708736253721, `TAAGCCACAGCAACGA-1` = 0.38416638976706, 
+       `CAATCCCTCGCATACA-1` = 0.538141336124385, `GTGATCAAGGCCAATG-1` = 0.415739697794551, 
+       `AACTTGGGTACGCAAG-1` = 0.114398171876353, `TGCTCGTTCTTCACTA-1` = 0.859454815027415, 
+       `TTTACGTCACTAGGAG-1` = 0.258387141741262, `AACTGTGAGGATTGCG-1` = 0.294366027633055, 
+       `CCTCCCTCACGATTAC-1` = 0.456638145634814, `GGGAACACACACTAGT-1` = 0.547686754830371, 
+       `GTTACGAGTTTGACCA-1` = 0.494379262672327, `CTGGGACTCTACCCGT-1` = 0.247299770782771, 
+       `TAATCGGGTTCTGAGT-1` = 0.389820214692913, `CCTCCCTGTCAAATCC-1` = 0.683378553050846, 
+       `CTACAGAGTGAAACAT-1` = 0.936111869866255, `GTAGTACGTACTAGAA-1` = 0.349068619448127, 
+       `AAAGGGCAGCGCACAA-1` = 0.298331047710926, `GAAGTCTGTTTCTTAC-1` = 0.344736467881565, 
+       `CTTCCAGTCTAGTCGA-1` = 0.347086109409192, `AAACGAACAATTCAGC-1` = 0.25001654379909, 
+       `AACTTGGAGGAGTCTG-1` = 0.416400534474196, `CGCGCAAGTAGAACGC-1` = 0.33871551146702
+       ))
+3: do.call(fun, args)
+2: call_pacs_function(fn$pacs_test_cumu, paste0("pacs_test_cumu ", 
+       label), expected_len = length(cumu_idx), expected_names = rownames(sub_mat), 
+       args = common_args)
+1: pacs_test_sparse_safe(label = paste0("permuted repeat ", iii), 
+       covariate_meta.data = group.info, formula_full = ~factor(group), 
+       formula_null = ~1, pic_matrix = data_mat, n_peaks_per_round = NULL, 
+       T_proportion_cutoff = params$t_prop_cutoff, cap_rates = cap_rates)
