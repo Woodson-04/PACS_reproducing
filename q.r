@@ -144,76 +144,20 @@ store_pvalues <- function(target, values, expected_len, method, scenario, repeat
   target
 }
 
-extract_pacs_p <- function(result, label) {
-  if (!is.list(result) || is.null(result$pacs_p_val)) {
-    stop(label, ": PACS result does not contain $pacs_p_val")
-  }
-  as.numeric(result$pacs_p_val)
-}
-
-extract_p_value_vector <- function(result, expected_len, expected_names, label) {
-  if (is.matrix(result) || is.data.frame(result)) {
-    numeric_cols <- vapply(as.data.frame(result), is.numeric, logical(1))
-    for (nm in names(numeric_cols)[numeric_cols]) {
-      if (length(result[, nm]) == expected_len) {
-        p <- as.numeric(result[, nm])
-        names(p) <- expected_names
-        return(p)
-      }
-    }
-  }
-
-  if (is.list(result)) {
-    candidate_names <- c(
-      "pacs_p_val", "p_val", "p_vals", "p_value", "p_values",
-      "pval", "pvals", "p_val_logit", "p_val_cumu"
-    )
-    for (nm in candidate_names) {
-      if (!is.null(result[[nm]]) && length(result[[nm]]) == expected_len) {
-        p <- as.numeric(result[[nm]])
-        names(p) <- expected_names
-        return(p)
-      }
-    }
-    numeric_items <- vapply(result, is.numeric, logical(1))
-    matching_items <- names(result)[numeric_items & lengths(result) == expected_len]
-    if (length(matching_items) > 0) {
-      p <- as.numeric(result[[matching_items[[1]]]])
-      names(p) <- expected_names
-      return(p)
-    }
-    stop(
-      label, ": cannot find a p-value vector of length ", expected_len,
-      " in result fields: ", paste(names(result), collapse = ", ")
-    )
-  }
-
-  if (is.numeric(result) && length(result) == expected_len) {
-    p <- as.numeric(result)
-    names(p) <- expected_names
-    return(p)
-  }
-
-  stop(label, ": unsupported PACS result shape")
-}
-
-call_pacs_function <- function(fun, label, expected_len, expected_names, args) {
-  fmls <- names(formals(fun))
-  if (!"..." %in% fmls) {
-    args <- args[names(args) %in% fmls]
-  }
-  log_msg("Calling ", label, " with args: ", paste(names(args), collapse = ", "))
-  result <- do.call(fun, args)
-  p <- extract_p_value_vector(result, expected_len, expected_names, label)
-  log_msg(label, " returned ", length(p), " p-values")
-  p
-}
-
-pacs_test_sparse_safe <- function(label, covariate_meta.data, formula_full, formula_null,
-                                  pic_matrix, n_peaks_per_round, T_proportion_cutoff,
-                                  cap_rates) {
+pacs_test_sparse_local_fixed <- function(covariate_meta.data,
+                                         formula_full,
+                                         formula_null,
+                                         pic_matrix,
+                                         n_peaks_per_round = NULL,
+                                         T_proportion_cutoff = 0.25,
+                                         cap_rates,
+                                         par_initial_null = NULL,
+                                         par_initial_full = NULL,
+                                         n_cores = 1,
+                                         verbose = TRUE,
+                                         label = "") {
   log_msg(
-    "Calling PACS safe wrapper ", label,
+    "Calling local fixed PACS sparse wrapper ", label,
     ": dim=", paste(dim(pic_matrix), collapse = " x "),
     ", rownames=", length(rownames(pic_matrix)),
     ", colnames=", length(colnames(pic_matrix)),
@@ -222,72 +166,149 @@ pacs_test_sparse_safe <- function(label, covariate_meta.data, formula_full, form
   )
 
   if (is.null(fn$pacs_test_cumu) || is.null(fn$pacs_test_logit)) {
-    stop("pacs_test_sparse_safe requires pacs_test_cumu and pacs_test_logit from library(PACS)")
+    stop("pacs_test_sparse_local_fixed requires pacs_test_cumu and pacs_test_logit from library(PACS)")
   }
 
-  nonzero_counts <- Matrix::rowSums(pic_matrix != 0)
-  multi_counts <- Matrix::rowSums(pic_matrix > 1)
-  t_proportion <- ifelse(nonzero_counts > 0, multi_counts / nonzero_counts, 0)
-  cumu_idx <- which(t_proportion >= T_proportion_cutoff)
-  logit_idx <- which(t_proportion < T_proportion_cutoff)
+  n_cell <- ncol(pic_matrix)
+  n_peaks <- nrow(pic_matrix)
+  p_names <- rownames(pic_matrix)
 
-  log_msg(
-    "PACS safe split ", label, ": ",
-    length(cumu_idx), " peaks routed to pacs_test_cumu, ",
-    length(logit_idx), " peaks routed to pacs_test_logit"
-  )
-
-  p_all <- rep(NA_real_, nrow(pic_matrix))
-  names(p_all) <- rownames(pic_matrix)
-
-  common_args <- list(
-    covariate_meta.data = covariate_meta.data,
-    formula_full = formula_full,
-    formula_null = formula_null,
-    pic_matrix = NULL,
-    n_peaks_per_round = n_peaks_per_round,
-    T_proportion_cutoff = T_proportion_cutoff,
-    cap_rates = cap_rates
-  )
-
-  if (length(cumu_idx) > 0) {
-    sub_mat <- pic_matrix[cumu_idx, , drop = FALSE]
-    rownames(sub_mat) <- rownames(pic_matrix)[cumu_idx]
-    colnames(sub_mat) <- colnames(pic_matrix)
-    common_args$pic_matrix <- sub_mat
-    p_all[cumu_idx] <- call_pacs_function(
-      fn$pacs_test_cumu,
-      paste0("pacs_test_cumu ", label),
-      expected_len = length(cumu_idx),
-      expected_names = rownames(sub_mat),
-      args = common_args
-    )
+  if (nrow(covariate_meta.data) != n_cell) {
+    stop("number of cells do not match between meta.data and data matrix")
+  }
+  if (length(cap_rates) != n_cell) {
+    stop("number of cells do not match between cap_rates and data matrix")
+  }
+  if (is.null(p_names)) {
+    p_names <- paste("f", seq_len(n_peaks), sep = "_")
+    rownames(pic_matrix) <- p_names
+  }
+  if (is.null(colnames(pic_matrix))) {
+    colnames(pic_matrix) <- paste0("cell_", seq_len(n_cell))
+  }
+  if (is.null(n_peaks_per_round)) {
+    n_peaks_per_round <- min(floor(2^29 / n_cell), n_peaks)
   }
 
-  if (length(logit_idx) > 0) {
-    sub_mat <- pic_matrix[logit_idx, , drop = FALSE]
-    rownames(sub_mat) <- rownames(pic_matrix)[logit_idx]
-    colnames(sub_mat) <- colnames(pic_matrix)
-    common_args$pic_matrix <- sub_mat
-    p_all[logit_idx] <- call_pacs_function(
-      fn$pacs_test_logit,
-      paste0("pacs_test_logit ", label),
-      expected_len = length(logit_idx),
-      expected_names = rownames(sub_mat),
-      args = common_args
-    )
+  if (inherits(pic_matrix, "Matrix")) {
+    pic_matrix_2 <- pic_matrix
+    pic_matrix_2@x[pic_matrix_2@x == 1] <- 0
+    pic_matrix_2 <- Matrix::drop0(pic_matrix_2)
+    pic_matrix_2@x <- rep(1, length = length(pic_matrix_2@x))
+    pic_matrixbin <- pic_matrix
+    pic_matrixbin@x <- rep(1, length = length(pic_matrixbin@x))
+  } else {
+    pic_matrix_2 <- Matrix::Matrix(pic_matrix, sparse = TRUE)
+    pic_matrix_2@x[pic_matrix_2@x == 1] <- 0
+    pic_matrix_2 <- Matrix::drop0(pic_matrix_2)
+    pic_matrix_2@x <- rep(1, length = length(pic_matrix_2@x))
+    pic_matrixbin <- Matrix::Matrix(pic_matrix, sparse = TRUE)
+    pic_matrixbin@x <- rep(1, length = length(pic_matrixbin@x))
   }
 
-  if (length(p_all) != nrow(pic_matrix)) {
+  rs <- Matrix::rowSums(pic_matrixbin)
+  rs2 <- Matrix::rowSums(pic_matrix_2)
+  p_2 <- rs2 / rs
+  p_2[is.na(p_2)] <- 0
+  n_p_2 <- sum(p_2 >= T_proportion_cutoff)
+  n_p_b <- sum(p_2 < T_proportion_cutoff)
+
+  if (verbose) {
+    log_msg(label, ": ", n_p_2, " peaks consider cumulative logit models")
+    log_msg(label, ": ", n_p_b, " peaks consider logit models")
+  }
+
+  f_sel <- names(p_2)[p_2 >= T_proportion_cutoff]
+  f_b_sel <- names(p_2)[p_2 < T_proportion_cutoff]
+  rm(pic_matrix_2)
+  gc(verbose = FALSE)
+
+  p_cumu <- list()
+  p_logit <- list()
+
+  if (n_p_2 >= 1) {
+    pic_matrix_cumu <- pic_matrix[f_sel, , drop = FALSE]
+    n_iters <- ceiling(n_p_2 / n_peaks_per_round)
+    p_cumu <- vector("list", n_iters)
+    for (jj in seq_len(n_iters)) {
+      peak_start <- (jj - 1) * n_peaks_per_round + 1
+      peak_end <- min(n_p_2, jj * n_peaks_per_round)
+      pic_dense <- as.matrix(pic_matrix_cumu[peak_start:peak_end, , drop = FALSE])
+      log_msg(label, ": pacs_test_cumu block ", jj, "/", n_iters, " dim=", paste(dim(pic_dense), collapse = " x "))
+      p_cumu[[jj]] <- fn$pacs_test_cumu(
+        covariate_meta.data = covariate_meta.data,
+        max_T = 2,
+        formula_full = formula_full,
+        formula_null = formula_null,
+        pic_matrix = pic_dense,
+        cap_rates = cap_rates,
+        n_cores = n_cores,
+        par_initial_null = par_initial_null,
+        par_initial_full = par_initial_full
+      )
+    }
+    rm(pic_matrix_cumu, pic_dense)
+    gc(verbose = FALSE)
+  }
+
+  if (n_p_b >= 1) {
+    pic_matrixbin_logit <- pic_matrixbin[f_b_sel, , drop = FALSE]
+    n_iters_b <- ceiling(n_p_b / n_peaks_per_round)
+    p_logit <- vector("list", n_iters_b)
+    for (jj in seq_len(n_iters_b)) {
+      peak_start <- (jj - 1) * n_peaks_per_round + 1
+      peak_end <- min(n_p_b, jj * n_peaks_per_round)
+      pic_dense <- as.matrix(pic_matrixbin_logit[peak_start:peak_end, , drop = FALSE])
+      log_msg(label, ": pacs_test_logit block ", jj, "/", n_iters_b, " dim=", paste(dim(pic_dense), collapse = " x "))
+      p_logit[[jj]] <- fn$pacs_test_logit(
+        covariate_meta.data = covariate_meta.data,
+        formula_full = formula_full,
+        formula_null = formula_null,
+        pic_matrix = pic_dense,
+        cap_rates = cap_rates,
+        n_cores = n_cores,
+        par_initial_null = par_initial_null,
+        par_initial_full = par_initial_full
+      )
+    }
+    rm(pic_matrixbin_logit, pic_dense)
+    gc(verbose = FALSE)
+  }
+
+  p_val_cumu <- if (length(p_cumu) > 0) {
+    unlist(lapply(p_cumu, function(x) x$pacs_p_val), use.names = TRUE)
+  } else {
+    numeric(0)
+  }
+  p_val_logit <- if (length(p_logit) > 0) {
+    unlist(lapply(p_logit, function(x) x$pacs_p_val), use.names = TRUE)
+  } else {
+    numeric(0)
+  }
+  p_val <- c(p_val_cumu, p_val_logit)[p_names]
+
+  if (length(p_val) != nrow(pic_matrix)) {
+    log_msg("ERROR: ", label, " p-value length ", length(p_val), " != nrow(pic_matrix) ", nrow(pic_matrix))
     stop(label, ": merged p-value length does not match nrow(pic_matrix)")
   }
-  if (!identical(names(p_all), rownames(pic_matrix))) {
+  if (!identical(names(p_val), p_names)) {
+    log_msg("ERROR: ", label, " merged p-value names do not match input peak names")
     stop(label, ": merged p-value names do not match rownames(pic_matrix)")
   }
-  if (anyNA(p_all)) {
+  if (anyNA(p_val)) {
+    missing_names <- p_names[is.na(p_val)]
+    log_msg("ERROR: ", label, " merged p-values contain NA for first missing peaks: ", paste(head(missing_names, 10), collapse = ", "))
     stop(label, ": merged p-values contain NA")
   }
-  p_all
+
+  convergence <- matrix(
+    NA,
+    nrow = nrow(pic_matrix),
+    ncol = 2,
+    dimnames = list(p_names, c("null", "full"))
+  )
+
+  list(pacs_converged = convergence, pacs_p_val = p_val)
 }
 
 log_msg("Starting PACS kidney Notebook 1 reproduction")
@@ -350,9 +371,6 @@ check_sample_size(ncol(p_by_c1), n_cell_sample, "actual PT cells")
 check_sample_size(ncol(p_by_c2), n_cell_sample, "actual LOH cells")
 
 fn <- list(pacs_test_sparse = get_fun("pacs_test_sparse"))
-if (is.null(fn$pacs_test_sparse)) {
-  stop("pacs_test_sparse is not available from library(PACS)")
-}
 fn$pacs_test_cumu <- get_fun("pacs_test_cumu")
 fn$pacs_test_logit <- get_fun("pacs_test_logit")
 if (is.null(fn$pacs_test_cumu) || is.null(fn$pacs_test_logit)) {
@@ -472,30 +490,30 @@ for (iii in seq_len(n_repeat)) {
   act_cap_rates <- c(act_true_q_pos, act_true_q_neg)
   check_pacs_input(act_data_mat, act_group.info, act_cap_rates, paste0("actual repeat ", iii))
 
-  our_p <- pacs_test_sparse_safe(
-    label = paste0("permuted repeat ", iii),
+  our_p <- pacs_test_sparse_local_fixed(
     covariate_meta.data = group.info,
     formula_full = ~ factor(group),
     formula_null = ~ 1,
     pic_matrix = data_mat,
     n_peaks_per_round = NULL,
     T_proportion_cutoff = params$t_prop_cutoff,
-    cap_rates = cap_rates
-  )
+    cap_rates = cap_rates,
+    label = paste0("permuted repeat ", iii)
+  )$pacs_p_val
   p_value_permuted_label[["our"]] <- store_pvalues(
     p_value_permuted_label[["our"]], our_p, n_features_sample, "our", "permuted", iii
   )
 
-  act_our_p <- pacs_test_sparse_safe(
-    label = paste0("actual repeat ", iii),
+  act_our_p <- pacs_test_sparse_local_fixed(
     covariate_meta.data = act_group.info,
     formula_full = ~ factor(group),
     formula_null = ~ 1,
     pic_matrix = act_data_mat,
     n_peaks_per_round = NULL,
     T_proportion_cutoff = params$t_prop_cutoff,
-    cap_rates = act_cap_rates
-  )
+    cap_rates = act_cap_rates,
+    label = paste0("actual repeat ", iii)
+  )$pacs_p_val
   p_value_actual_label[["our"]] <- store_pvalues(
     p_value_actual_label[["our"]], act_our_p, n_features_sample, "our", "actual", iii
   )

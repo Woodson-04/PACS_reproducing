@@ -1,0 +1,69 @@
+2026-05-26 17:25:47 | Starting PACS kidney Notebook 1 reproduction 
+2026-05-26 17:25:47 | Output directory: /home/woodson/PACS_reproducing/results/kidney_notebook1_20260526_172547 
+2026-05-26 17:25:47 | Data directory: /home/woodson/biostatistic/pacs/PACS_data 
+2026-05-26 17:26:14 | Original pmats dim (cells x peaks): 14458 x 300755 
+2026-05-26 17:27:49 | PT-only p_by_c dim after filtering: 120050 x 6308 
+2026-05-26 17:27:49 | Actual PT p_by_c1 dim after filtering: 140549 x 6308 
+2026-05-26 17:27:49 | Actual LOH p_by_c2 dim after filtering: 140549 x 2341 
+2026-05-26 17:27:50 | run_baselines is FALSE; running PACS only. 
+2026-05-26 17:27:51 | Repeat 1 / 5 
+2026-05-26 17:28:02 | Calling local fixed PACS sparse wrapper permuted repeat 1: dim=10000 x 1000, rownames=10000, colnames=1000, meta_rows=1000, cap_rates=1000 
+2026-05-26 17:28:02 | permuted repeat 1: 904 peaks consider cumulative logit models 
+2026-05-26 17:28:02 | permuted repeat 1: 9096 peaks consider logit models 
+2026-05-26 17:28:03 | permuted repeat 1: pacs_test_cumu block 1/1 dim=904 x 1000 
+2026-05-26 17:28:19 | permuted repeat 1: pacs_test_logit block 1/1 dim=9096 x 1000 
+2026-05-26 17:30:22 | Calling local fixed PACS sparse wrapper actual repeat 1: dim=10000 x 1000, rownames=10000, colnames=1000, meta_rows=1000, cap_rates=1000 
+2026-05-26 17:30:22 | actual repeat 1: 1097 peaks consider cumulative logit models 
+2026-05-26 17:30:22 | actual repeat 1: 8903 peaks consider logit models 
+2026-05-26 17:30:22 | actual repeat 1: pacs_test_cumu block 1/1 dim=1097 x 1000 
+2026-05-26 17:30:38 | actual repeat 1: pacs_test_logit block 1/1 dim=8903 x 1000 
+2026-05-26 17:31:57 | Repeat 2 / 5 
+2026-05-26 17:31:57 | Calling local fixed PACS sparse wrapper permuted repeat 2: dim=10000 x 1000, rownames=10000, colnames=1000, meta_rows=1000, cap_rates=1000 
+2026-05-26 17:31:57 | permuted repeat 2: 1018 peaks consider cumulative logit models 
+2026-05-26 17:31:57 | permuted repeat 2: 8982 peaks consider logit models 
+2026-05-26 17:31:58 | permuted repeat 2: pacs_test_cumu block 1/1 dim=1018 x 1000 
+2026-05-26 17:32:10 | permuted repeat 2: pacs_test_logit block 1/1 dim=8982 x 1000 
+2026-05-26 17:33:24 | Calling local fixed PACS sparse wrapper actual repeat 2: dim=10000 x 1000, rownames=10000, colnames=1000, meta_rows=1000, cap_rates=1000 
+2026-05-26 17:33:24 | actual repeat 2: 1112 peaks consider cumulative logit models 
+2026-05-26 17:33:24 | actual repeat 2: 8888 peaks consider logit models 
+2026-05-26 17:33:24 | actual repeat 2: pacs_test_cumu block 1/1 dim=1112 x 1000 
+2026-05-26 17:33:40 | actual repeat 2: pacs_test_logit block 1/1 dim=8888 x 1000 
+2026-05-26 17:35:00 | Repeat 3 / 5 
+2026-05-26 17:35:01 | Calling local fixed PACS sparse wrapper permuted repeat 3: dim=10000 x 1000, rownames=10000, colnames=1000, meta_rows=1000, cap_rates=1000 
+2026-05-26 17:35:01 | permuted repeat 3: 952 peaks consider cumulative logit models 
+2026-05-26 17:35:01 | permuted repeat 3: 9048 peaks consider logit models 
+2026-05-26 17:35:01 | permuted repeat 3: pacs_test_cumu block 1/1 dim=952 x 1000 
+2026-05-26 17:35:13 | permuted repeat 3: pacs_test_logit block 1/1 dim=9048 x 1000 
+2026-05-26 17:36:25 | Calling local fixed PACS sparse wrapper actual repeat 3: dim=10000 x 1000, rownames=10000, colnames=1000, meta_rows=1000, cap_rates=1000 
+2026-05-26 17:36:25 | actual repeat 3: 1070 peaks consider cumulative logit models 
+2026-05-26 17:36:25 | actual repeat 3: 8930 peaks consider logit models 
+2026-05-26 17:36:25 | actual repeat 3: pacs_test_cumu block 1/1 dim=1070 x 1000 
+2026-05-26 17:36:39 | actual repeat 3: pacs_test_logit block 1/1 dim=8930 x 1000 
+2026-05-26 17:37:59 | Repeat 4 / 5 
+2026-05-26 17:37:59 | Calling local fixed PACS sparse wrapper permuted repeat 4: dim=10000 x 1000, rownames=10000, colnames=1000, meta_rows=1000, cap_rates=1000 
+2026-05-26 17:37:59 | permuted repeat 4: 984 peaks consider cumulative logit models 
+2026-05-26 17:37:59 | permuted repeat 4: 9016 peaks consider logit models 
+2026-05-26 17:38:00 | permuted repeat 4: pacs_test_cumu block 1/1 dim=984 x 1000 
+2026-05-26 17:38:13 | permuted repeat 4: pacs_test_logit block 1/1 dim=9016 x 1000 
+2026-05-26 17:39:26 | Calling local fixed PACS sparse wrapper actual repeat 4: dim=10000 x 1000, rownames=10000, colnames=1000, meta_rows=1000, cap_rates=1000 
+2026-05-26 17:39:26 | actual repeat 4: 1002 peaks consider cumulative logit models 
+2026-05-26 17:39:26 | actual repeat 4: 8998 peaks consider logit models 
+2026-05-26 17:39:26 | actual repeat 4: pacs_test_cumu block 1/1 dim=1002 x 1000 
+2026-05-26 17:39:40 | actual repeat 4: pacs_test_logit block 1/1 dim=8998 x 1000 
+2026-05-26 17:41:00 | Repeat 5 / 5 
+2026-05-26 17:41:01 | Calling local fixed PACS sparse wrapper permuted repeat 5: dim=10000 x 1000, rownames=10000, colnames=1000, meta_rows=1000, cap_rates=1000 
+2026-05-26 17:41:01 | permuted repeat 5: 834 peaks consider cumulative logit models 
+2026-05-26 17:41:01 | permuted repeat 5: 9166 peaks consider logit models 
+2026-05-26 17:41:01 | permuted repeat 5: pacs_test_cumu block 1/1 dim=834 x 1000 
+2026-05-26 17:41:11 | permuted repeat 5: pacs_test_logit block 1/1 dim=9166 x 1000 
+2026-05-26 17:42:26 | Calling local fixed PACS sparse wrapper actual repeat 5: dim=10000 x 1000, rownames=10000, colnames=1000, meta_rows=1000, cap_rates=1000 
+2026-05-26 17:42:26 | actual repeat 5: 1033 peaks consider cumulative logit models 
+2026-05-26 17:42:26 | actual repeat 5: 8967 peaks consider logit models 
+2026-05-26 17:42:27 | actual repeat 5: pacs_test_cumu block 1/1 dim=1033 x 1000 
+2026-05-26 17:42:41 | actual repeat 5: pacs_test_logit block 1/1 dim=8967 x 1000 
+2026-05-26 17:44:04 | Pseudo-true union methods: our 
+2026-05-26 17:44:04 | PACS-only run: power for 'our' is defined against an 'our'-only union and is not the full notebook pseudo-true power comparison. 
+2026-05-26 17:44:05 | Saved result RDS: /home/woodson/PACS_reproducing/results/kidney_notebook1_20260526_172547/pacs_kidney_notebook1_result.rds 
+2026-05-26 17:44:05 | Saved summary CSV: /home/woodson/PACS_reproducing/results/kidney_notebook1_20260526_172547/summary.csv 
+2026-05-26 17:44:05 | Saved session info: /home/woodson/PACS_reproducing/results/kidney_notebook1_20260526_172547/session_info.txt 
+2026-05-26 17:44:05 | Finished 
