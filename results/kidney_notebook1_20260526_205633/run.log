@@ -1,0 +1,25 @@
+2026-05-26 20:56:33 | Starting PACS kidney Notebook 1 reproduction 
+2026-05-26 20:56:33 | Output directory: /home/woodson/PACS_reproducing/results/kidney_notebook1_20260526_205633 
+2026-05-26 20:56:33 | Data directory: /home/woodson/biostatistic/pacs/PACS_data 
+2026-05-26 20:57:33 | Original pmats dim (cells x peaks): 14458 x 300755 
+2026-05-26 20:59:58 | PT-only p_by_c dim after filtering: 120050 x 6308 
+2026-05-26 20:59:58 | Actual PT p_by_c1 dim after filtering: 140549 x 6308 
+2026-05-26 20:59:58 | Actual LOH p_by_c2 dim after filtering: 140549 x 2341 
+2026-05-26 20:59:59 | Using clean-room reimplemented baseline methods; not original author baseline: /home/woodson/PACS_reproducing/baseline_methods_notebook1.R 
+2026-05-26 20:59:59 | Running available baseline methods: seurat, archR, snapATAC, fisher. Treat clean-room methods as approximate unless original notebook source is restored. 
+2026-05-26 21:00:01 | Repeat 1 / 1 
+2026-05-26 21:00:03 | Calling local fixed PACS sparse wrapper permuted repeat 1: dim=100 x 100, rownames=100, colnames=100, meta_rows=100, cap_rates=100 
+2026-05-26 21:00:03 | permuted repeat 1: 20 peaks consider cumulative logit models 
+2026-05-26 21:00:03 | permuted repeat 1: 80 peaks consider logit models 
+2026-05-26 21:00:05 | permuted repeat 1: pacs_test_cumu block 1/1 dim=20 x 100 
+2026-05-26 21:00:06 | permuted repeat 1: pacs_test_logit block 1/1 dim=80 x 100 
+2026-05-26 21:00:06 | Calling local fixed PACS sparse wrapper actual repeat 1: dim=100 x 100, rownames=100, colnames=100, meta_rows=100, cap_rates=100 
+2026-05-26 21:00:06 | actual repeat 1: 16 peaks consider cumulative logit models 
+2026-05-26 21:00:06 | actual repeat 1: 84 peaks consider logit models 
+2026-05-26 21:00:07 | actual repeat 1: pacs_test_cumu block 1/1 dim=16 x 100 
+2026-05-26 21:00:07 | actual repeat 1: pacs_test_logit block 1/1 dim=84 x 100 
+2026-05-26 21:00:12 | Pseudo-true union methods: our, seurat, archR, snapATAC 
+2026-05-26 21:00:13 | Saved result RDS: /home/woodson/PACS_reproducing/results/kidney_notebook1_20260526_205633/pacs_kidney_notebook1_result.rds 
+2026-05-26 21:00:13 | Saved summary CSV: /home/woodson/PACS_reproducing/results/kidney_notebook1_20260526_205633/summary.csv 
+2026-05-26 21:00:13 | Saved session info: /home/woodson/PACS_reproducing/results/kidney_notebook1_20260526_205633/session_info.txt 
+2026-05-26 21:00:13 | Finished 

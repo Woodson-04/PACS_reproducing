@@ -401,8 +401,38 @@ baseline_fun_names <- c(
   fisher = "fisher_method"
 )
 
+baseline_source <- list(
+  type = "none",
+  path = NA_character_,
+  note = "run_baselines is FALSE; no baseline methods loaded"
+)
 available_baselines <- character()
 if (params$run_baselines) {
+  original_baseline_file <- file.path(script_dir, "other_methods_for_differential_updated.R")
+  cleanroom_baseline_file <- file.path(script_dir, "baseline_methods_notebook1.R")
+  if (file.exists(original_baseline_file)) {
+    source(original_baseline_file)
+    baseline_source <- list(
+      type = "original_notebook",
+      path = original_baseline_file,
+      note = "Using original notebook baseline methods"
+    )
+    log_msg("Using original notebook baseline methods: ", original_baseline_file)
+  } else if (file.exists(cleanroom_baseline_file)) {
+    source(cleanroom_baseline_file)
+    baseline_source <- list(
+      type = "clean_room_reimplemented",
+      path = cleanroom_baseline_file,
+      note = "Using clean-room reimplemented baseline methods; not original author baseline"
+    )
+    log_msg("Using clean-room reimplemented baseline methods; not original author baseline: ", cleanroom_baseline_file)
+  } else {
+    stop(
+      "run_baselines is TRUE, but no baseline method file was found in the project. ",
+      "Expected other_methods_for_differential_updated.R or baseline_methods_notebook1.R"
+    )
+  }
+
   for (method in baseline_names) {
     f <- get_fun(baseline_fun_names[[method]])
     if (is.null(f)) {
@@ -415,14 +445,17 @@ if (params$run_baselines) {
       available_baselines <- c(available_baselines, method)
     }
   }
-  if (length(available_baselines) == 0) {
-    log_msg("No baseline methods are available; running PACS only.")
-  } else {
-    log_msg(
-      "Running available baseline methods: ", paste(available_baselines, collapse = ", "),
-      ". Treat these as available/approximate implementations unless original notebook source is restored."
+  missing_baselines <- setdiff(baseline_names, available_baselines)
+  if (length(missing_baselines) > 0) {
+    stop(
+      "Baseline source was loaded, but these required methods are missing: ",
+      paste(missing_baselines, collapse = ", ")
     )
   }
+  log_msg(
+    "Running available baseline methods: ", paste(available_baselines, collapse = ", "),
+    ". Treat clean-room methods as approximate unless original notebook source is restored."
+  )
 } else {
   log_msg("run_baselines is FALSE; running PACS only.")
 }
@@ -659,12 +692,18 @@ result <- list(
   cutoffs = cutoffs,
   union_methods = union_methods,
   power_mat = power_mat,
-  t1power_mat = t1power_mat
+  t1power_mat = t1power_mat,
+  baseline_source = baseline_source
 )
 
 saveRDS(result, file.path(run_dir, "pacs_kidney_notebook1_result.rds"))
 write.csv(
-  data.frame(method = rownames(t1power_mat), t1power_mat, row.names = NULL),
+  data.frame(
+    method = rownames(t1power_mat),
+    t1power_mat,
+    baseline_source = baseline_source$type,
+    row.names = NULL
+  ),
   file.path(run_dir, "summary.csv"),
   row.names = FALSE
 )
