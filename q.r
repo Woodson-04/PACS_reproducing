@@ -81,10 +81,41 @@ if (!grepl("^(/|[A-Za-z]:)", params$output_dir)) {
 
 set.seed(params$seed)
 
-timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
-run_dir <- file.path(params$output_dir, paste0("kidney_notebook1_", timestamp))
+run_scale <- if (
+  params$n_repeat == 1L &&
+    params$n_cell_sample == 50L &&
+    params$n_features_sample == 100L
+) {
+  "small"
+} else if (
+  params$n_repeat == 1L &&
+    params$n_cell_sample == 100L &&
+    params$n_features_sample == 1000L
+) {
+  "medium"
+} else if (
+  params$n_repeat == 5L &&
+    params$n_cell_sample == 500L &&
+    params$n_features_sample == 10000L
+) {
+  "large"
+} else {
+  "custom"
+}
+run_mode <- if (params$run_baselines) "baseline" else "pacs_only"
+timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
+run_name <- paste(timestamp, run_scale, run_mode, sep = "_")
+run_dir <- file.path(params$output_dir, run_name)
 if (dir.exists(run_dir) && !params$overwrite) {
-  stop("Output directory already exists: ", run_dir)
+  version <- 2L
+  repeat {
+    candidate <- file.path(params$output_dir, paste0(run_name, "_v", version))
+    if (!dir.exists(candidate)) {
+      run_dir <- candidate
+      break
+    }
+    version <- version + 1L
+  }
 }
 dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
 
