@@ -11,6 +11,7 @@ Local locations searched:
 /home/woodson/biostatistic
 /home/woodson/biostatistic/pacs
 /home/woodson/biostatistic/pacs/PACS_data
+/home/woodson/biostatistic/pacs/GSE157079
 ```
 
 Keywords searched included:
@@ -96,6 +97,19 @@ The completed large Notebook 1 benchmark result is:
 /home/woodson/PACS_reproducing/results/20260526_2318_large_baseline/summary.csv
 ```
 
+Newly downloaded GSE157079 files are available read-only:
+
+```text
+/home/woodson/biostatistic/pacs/GSE157079/GSE157079_snATAC_UMAP_coordinates.csv.gz
+/home/woodson/biostatistic/pacs/GSE157079/GSE157079_snATAC_metadata.csv.gz
+/home/woodson/biostatistic/pacs/GSE157079/GSE157079_snATAC_peak_list.csv.gz
+/home/woodson/biostatistic/pacs/GSE157079/GSE157079_snATAC_cell_by_peak_matrix.txt.gz
+```
+
+These files should support UMAP/cell-type panels and later matrix-level
+differential accessibility analyses. The large `cell_by_peak_matrix` should be
+handled by a dedicated script rather than fully read during inspection.
+
 ## Direct Figure Script Availability
 
 No ready-to-run author script for the mouse kidney figure panels was found in
@@ -109,6 +123,7 @@ annotation panel.
 
 Based on current data and Notebook 1 results:
 
+- GSE157079 UMAP by cell type and, if metadata supports it, sample/batch.
 - Cell type composition bar plot.
 - PT vs LOH depth/capture-rate distribution.
 - PACS permuted-label QQ plot.

@@ -109,6 +109,42 @@ figures/mouse_kidney/pacs_benchmark_t1e_power_barplot.png
 figures/mouse_kidney/pacs_permuted_qq_plot.png
 ```
 
+## GSE157079 Intake
+
+The downloaded GSE157079 files are treated as read-only source data:
+
+```text
+/home/woodson/biostatistic/pacs/GSE157079/GSE157079_snATAC_UMAP_coordinates.csv.gz
+/home/woodson/biostatistic/pacs/GSE157079/GSE157079_snATAC_metadata.csv.gz
+/home/woodson/biostatistic/pacs/GSE157079/GSE157079_snATAC_peak_list.csv.gz
+/home/woodson/biostatistic/pacs/GSE157079/GSE157079_snATAC_cell_by_peak_matrix.txt.gz
+```
+
+The project does not modify or extract files in that directory. The first
+GSE157079 stage saves only lightweight inspection reports, merged metadata,
+peak previews, and UMAP figures under this repository. The large
+`cell_by_peak_matrix` is not read fully by the inspection or UMAP scripts; it
+needs a dedicated matrix-processing script later.
+
+GSE157079 metadata column handling:
+
+- The UMAP CSV has an unnamed first column and no barcode; it is standardized as
+  `row_index`, `umap_1`, `umap_2`.
+- The metadata CSV is standardized as `row_index`, `cell_barcode`, `sample`,
+  `cell_type`.
+- UMAP and metadata are merged by `row_index`.
+- `cell_barcode` comes from the metadata `barcodes` column.
+- `sample` comes from the metadata `samples` column.
+- `cell_type` comes from the metadata `clusters` column.
+
+GSE157079 scripts:
+
+```text
+scripts/mouse_kidney_figures/00_inspect_gse157079.R
+scripts/mouse_kidney_figures/00_prepare_gse157079_metadata.R
+scripts/mouse_kidney_figures/03_gse157079_umap_plots.R
+```
+
 ## Baseline Strategy
 
 Do not use `/home/woodson/biostatistic/pacs/my_methods.r`; it is an old simplified substitute and is not part of this reproduction path.
@@ -122,11 +158,8 @@ Baseline loading in `q.r` uses this priority when `--run_baselines TRUE`:
    - Not the original author baseline file.
    - Results must be reported as reimplemented/approximate baselines.
 
-The search status is documented in:
-
-```text
-baseline_source_search_report.md
-```
+The original baseline search conclusion is now summarized in
+`notebook1_reproduction_report.md` and `baseline_official_methods_review.md`.
 
 ## Clean-Room Baseline Alignment Notes
 
@@ -261,4 +294,31 @@ Rscript scripts/mouse_kidney_figures/01_overview_plots.R \
   --data_dir /home/woodson/biostatistic/pacs/PACS_data \
   --notebook1_result_dir /home/woodson/PACS_reproducing/results/20260526_2318_large_baseline \
   --output_dir /home/woodson/PACS_reproducing/figures/mouse_kidney
+```
+
+GSE157079 inspection:
+
+```bash
+cd /home/woodson/PACS_reproducing
+Rscript scripts/mouse_kidney_figures/00_inspect_gse157079.R \
+  --gse_dir /home/woodson/biostatistic/pacs/GSE157079 \
+  --out_dir /home/woodson/PACS_reproducing/results/mouse_kidney_figures
+```
+
+GSE157079 metadata preparation:
+
+```bash
+cd /home/woodson/PACS_reproducing
+Rscript scripts/mouse_kidney_figures/00_prepare_gse157079_metadata.R \
+  --gse_dir /home/woodson/biostatistic/pacs/GSE157079 \
+  --out_dir /home/woodson/PACS_reproducing/results/mouse_kidney_figures
+```
+
+GSE157079 UMAP plots:
+
+```bash
+cd /home/woodson/PACS_reproducing
+Rscript scripts/mouse_kidney_figures/03_gse157079_umap_plots.R \
+  --metadata_csv /home/woodson/PACS_reproducing/results/mouse_kidney_figures/gse157079_metadata_merged.csv \
+  --out_dir /home/woodson/PACS_reproducing/figures/mouse_kidney
 ```

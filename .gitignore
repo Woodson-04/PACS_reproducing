@@ -1,23 +1,60 @@
+# Archives and compressed raw data
 *.zip
 *.tar
 *.tar.gz
+*.tgz
 *.gz
-*.rds
-*.RData
-*.csv
-*.tsv
-*.h5
-*.h5ad
-*.bam
-*.sam
-*.fastq
-*.fq
 
-data/
+# Large raw/processed data directories
+data/raw/
+data/processed/
 raw_data/
 output/
 outputs/
-.cache/
+
+# Large R and analysis intermediates
+*.rds
+*.rdata
+*.RData
+*.h5
+*.h5ad
+*.loom
+
+# Sequencing/alignment files
+*.bam
+*.bai
+*.sam
+*.fastq
+*.fq
+*.fastq.gz
+*.fq.gz
+
+# Logs and debug scratch
+logs/
+debug_*.R
+debug_*.r
+*_debug.R
+*_debug.r
+*.tmp
+*.temp
+
+# R session/editor files
 .Rhistory
 .RData
 .Rproj.user/
+.cache/
+
+# Keep project scripts, reports, final figures, and representative result
+# summaries/logs visible to git. Large binary RDS/RData files stay ignored.
+!scripts/
+!scripts/**
+!figures/
+!figures/mouse_kidney/
+!figures/mouse_kidney/*.png
+!figures/mouse_kidney/*.pdf
+!*.md
+!results/
+!results/**/
+!results/**/summary.csv
+!results/**/run.log
+!results/**/session_info.txt

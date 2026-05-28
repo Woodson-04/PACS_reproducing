@@ -2,6 +2,34 @@
 
 ## Stage 1: Figures Supported by Current Data
 
+### 0. GSE157079 Metadata/UMAP Intake
+
+- Data input:
+  `/home/woodson/biostatistic/pacs/GSE157079/GSE157079_snATAC_UMAP_coordinates.csv.gz`,
+  `/home/woodson/biostatistic/pacs/GSE157079/GSE157079_snATAC_metadata.csv.gz`,
+  and `/home/woodson/biostatistic/pacs/GSE157079/GSE157079_snATAC_peak_list.csv.gz`.
+- R packages: base R; optionally `data.table` for faster compressed CSV reads;
+  `ggplot2` for plotting.
+- Output:
+  `results/mouse_kidney_figures/gse157079_inspection_report.md`,
+  `results/mouse_kidney_figures/gse157079_metadata_merged.csv`,
+  `results/mouse_kidney_figures/gse157079_metadata_summary.csv`,
+  `figures/mouse_kidney/gse157079_umap_by_celltype.png/pdf`, and optional
+  sample/batch UMAPs.
+- Can do now: yes.
+- Status: in debugging; `00_prepare_gse157079_metadata.R` now standardizes GEO
+  unnamed-index columns and merges UMAP with metadata by `row_index`.
+- Article relation: supports UMAP/cell-type overview panels from the original
+  mouse kidney snATAC dataset.
+- Difficulty: low-medium.
+- Expected visual: publication-style UMAP colored by cell type and, when
+  available, by sample/batch/condition.
+- Important constraint: the large
+  `GSE157079_snATAC_cell_by_peak_matrix.txt.gz` should not be fully read in the
+  inspection, metadata, or UMAP scripts. UMAP plotting only needs the merged
+  metadata table, not the huge matrix. The matrix needs a dedicated
+  matrix-processing script later.
+
 ### 1. Cell Type Composition Bar Plot
 
 - Data input: `x.sp_cluster2` from `data_for_test_for_t1e_power.rdata`.

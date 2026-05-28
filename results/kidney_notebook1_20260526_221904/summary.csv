@@ -1,0 +1,6 @@
+"method","t1e","t1e_sd","power","power_sd","scenario","baseline_source"
+"our",0.025,NA,0.730593607305936,NA,1,"clean_room_reimplemented"
+"seurat",0.0663615560640732,NA,0.776255707762557,NA,1,"clean_room_reimplemented"
+"archR",0.0277442702050663,NA,0.36986301369863,NA,1,"clean_room_reimplemented"
+"snapATAC",0.001,NA,0.602739726027397,NA,1,"clean_room_reimplemented"
+"fisher",0.004,NA,0.602739726027397,NA,1,"clean_room_reimplemented"
