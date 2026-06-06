@@ -1,0 +1,2 @@
+"space_name","coordinate_space_type","n_cells","k","n_batches","n_cell_types","observed_batch_mixing_score","expected_batch_mixing_score","normalized_batch_mixing_score","coordinate_columns_used"
+"GEO precomputed UMAP P56, UMAP space","UMAP-space",13526,30,2,15,0.460320863522106,0.490206991403151,0.939033656383601,"umap_1;umap_2"

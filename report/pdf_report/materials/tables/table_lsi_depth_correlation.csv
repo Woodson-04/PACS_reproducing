@@ -1,0 +1,3 @@
+"stage_lsi1","spearman","pearson","interpretation"
+"before LSI_1",-0.998327460379882,-0.973884299301792,"LSI_1 is strongly correlated with sequencing depth and should be interpreted as a depth/QC component."
+"after LSI_1",0.997631451531185,0.982981586177747,"LSI_1 is strongly correlated with sequencing depth and should be interpreted as a depth/QC component."

@@ -1,0 +1,6 @@
+"space_name","coordinate_space_type","n_cells","k","n_batches","n_cell_types","observed_batch_mixing_score","expected_batch_mixing_score","normalized_batch_mixing_score","coordinate_columns_used"
+"GEO precomputed UMAP P56, UMAP space","UMAP-space",13526,30,2,15,0.460320863522106,0.490206991403151,0.939033656383601,"umap_1;umap_2"
+"P56 10000/10000 before","UMAP-space",13526,30,2,15,0.0129873330376066,0.490206991403151,0.02649356958462,"before_umap_1;before_umap_2"
+"P56 10000/10000 after","UMAP-space",13526,30,2,15,0.31899058603184,0.490206991403151,0.650726308734954,"after_umap_1;after_umap_2"
+"P56 20000/10000 before","UMAP-space",13526,30,2,15,0.00969737296071763,0.490206991403151,0.0197822004393699,"before_umap_1;before_umap_2"
+"P56 20000/10000 after","UMAP-space",13526,30,2,15,0.298432648233033,0.490206991403151,0.608789049252051,"after_umap_1;after_umap_2"

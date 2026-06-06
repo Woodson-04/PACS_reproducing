@@ -1,0 +1,2 @@
+"stage","batch_silhouette","cell_type_silhouette","normalized_batch_entropy","same_batch_fraction","same_celltype_fraction","batch_prediction_accuracy","age_group_silhouette","same_age_fraction","normalized_age_entropy","age_group_prediction_accuracy"
+"GEO precomputed UMAP global",-0.0803480842398364,0.564064690936786,0.85842969124838,0.338046805104299,0.982231482789471,0.319482048263685,-0.0497906043791149,0.620507840090408,0.707601001438267,0.604473219540906

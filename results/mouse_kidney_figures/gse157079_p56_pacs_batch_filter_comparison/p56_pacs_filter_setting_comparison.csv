@@ -1,0 +1,3 @@
+"setting","run_name","n_top_peaks","max_pacs_peaks","fdr_cutoff","tested_peaks","significant_batch_peaks","retained_peaks","after_batch_silhouette","after_normalized_batch_entropy","after_same_batch_fraction","after_batch_prediction_accuracy","after_cell_type_silhouette","after_same_celltype_fraction","status"
+"5000/5000/FDR0.05","default",5000,5000,0.05,5000,3140,1860,0.0266124732753856,0.69563795786925,0.696926906205333,0.589945786101528,0.159328174294953,0.665042633939573,"completed"
+"10000/10000/FDR0.05","p56_top10000_test10000_fdr005",10000,10000,0.05,10000,6305,3695,0.0132831029291078,0.711105683636068,0.68100941396816,0.575406604238541,0.301977044782005,0.775917985115087,"current_main"

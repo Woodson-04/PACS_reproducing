@@ -1,0 +1,2 @@
+"space_name","coordinate_space_type","n_cells","k","n_batches","n_cell_types","observed_batch_mixing_score","expected_batch_mixing_score","normalized_batch_mixing_score","coordinate_columns_used"
+"P56 20000/10000 before","UMAP-space",13526,30,2,15,0.00969737296071763,0.490206991403151,0.0197822004393699,"before_umap_1;before_umap_2"

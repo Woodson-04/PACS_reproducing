@@ -1,0 +1,2 @@
+"stage","batch_silhouette","cell_type_silhouette","normalized_batch_entropy","same_batch_fraction","same_celltype_fraction","batch_prediction_accuracy"
+"GEO precomputed UMAP P56 subset",0.00140824420355631,0.586919961295356,0.925691157479429,0.539679136477894,0.975383212578244,0.546821094135042

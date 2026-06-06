@@ -1,0 +1,17 @@
+PACS package path:
+[1] "/home/woodson/R/x86_64-pc-linux-gnu-library/4.6/PACS"
+
+PACS version:
+[1] ‘0.2.2’
+
+pacs_test_cumu args:
+function (covariate_meta.data, formula_full, formula_null, pic_matrix, 
+    max_T = 2, cap_rates, par_initial_null = NULL, par_initial_full = NULL, 
+    n_cores = 1) 
+NULL
+
+pacs_test_logit args:
+function (covariate_meta.data, formula_full, formula_null, pic_matrix, 
+    cap_rates, par_initial_null = NULL, par_initial_full = NULL, 
+    n_cores = 1) 
+NULL

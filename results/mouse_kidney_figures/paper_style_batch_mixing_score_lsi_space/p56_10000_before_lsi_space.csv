@@ -1,0 +1,2 @@
+"space_name","coordinate_space_type","n_cells","k","n_batches","n_cell_types","observed_batch_mixing_score","expected_batch_mixing_score","normalized_batch_mixing_score","coordinate_columns_used"
+"P56 10000/10000 before, LSI space","LSI-space",13526,30,2,15,0.025494110108926,0.490206991403151,0.0520068268221809,"LSI_2;LSI_3;LSI_4;LSI_5;LSI_6;LSI_7;LSI_8;LSI_9;LSI_10;LSI_11;LSI_12;LSI_13;LSI_14;LSI_15;LSI_16;LSI_17;LSI_18;LSI_19;LSI_20;LSI_21;LSI_22;LSI_23;LSI_24;LSI_25;LSI_26;LSI_27;LSI_28;LSI_29;LSI_30"
