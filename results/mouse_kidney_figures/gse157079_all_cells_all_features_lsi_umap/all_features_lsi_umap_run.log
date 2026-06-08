@@ -1,0 +1,44 @@
+2026-06-07 19:01:11 | Reading metadata 
+2026-06-07 19:01:11 | Reading peak list 
+2026-06-07 19:01:13 | Dry-run report saved: /home/woodson/PACS_reproducing/results/mouse_kidney_figures/gse157079_all_cells_all_features_lsi_umap/all_features_feasibility_report.md 
+2026-06-07 19:03:36 | Reading metadata 
+2026-06-07 19:03:36 | Reading peak list 
+2026-06-07 19:03:38 | All-feature full run start 
+2026-06-07 19:03:38 | Expected matrix dim: 28316 x 300755; nnz=166121193 
+2026-06-07 19:03:38 | Estimated raw dgCMatrix core memory GB: 1.858 
+2026-06-07 19:03:38 | Streaming all MatrixMarket coordinate entries 
+2026-06-07 19:03:51 | Processed 5e+06 coordinate lines 
+2026-06-07 19:04:03 | Processed 1e+07 coordinate lines 
+2026-06-07 19:04:16 | Processed 1.5e+07 coordinate lines 
+2026-06-07 19:04:28 | Processed 2e+07 coordinate lines 
+2026-06-07 19:04:41 | Processed 2.5e+07 coordinate lines 
+2026-06-07 19:04:53 | Processed 3e+07 coordinate lines 
+2026-06-07 19:05:06 | Processed 3.5e+07 coordinate lines 
+2026-06-07 19:05:17 | Processed 4e+07 coordinate lines 
+2026-06-07 19:05:28 | Processed 4.5e+07 coordinate lines 
+2026-06-07 19:05:44 | Processed 5e+07 coordinate lines 
+2026-06-07 19:05:55 | Processed 5.5e+07 coordinate lines 
+2026-06-07 19:06:10 | Processed 6e+07 coordinate lines 
+2026-06-07 19:06:21 | Processed 6.5e+07 coordinate lines 
+2026-06-07 19:06:37 | Processed 7e+07 coordinate lines 
+2026-06-07 19:06:53 | Processed 7.5e+07 coordinate lines 
+2026-06-07 19:07:09 | Processed 8e+07 coordinate lines 
+2026-06-07 19:07:20 | Processed 8.5e+07 coordinate lines 
+2026-06-07 19:07:36 | Processed 9e+07 coordinate lines 
+2026-06-07 19:07:48 | Processed 9.5e+07 coordinate lines 
+2026-06-07 19:08:02 | Processed 1e+08 coordinate lines 
+2026-06-07 19:08:14 | Processed 1.05e+08 coordinate lines 
+2026-06-07 19:08:29 | Processed 1.1e+08 coordinate lines 
+2026-06-07 19:08:40 | Processed 1.15e+08 coordinate lines 
+2026-06-07 19:08:54 | Processed 1.2e+08 coordinate lines 
+2026-06-07 19:09:06 | Processed 1.25e+08 coordinate lines 
+2026-06-07 19:09:23 | Processed 1.3e+08 coordinate lines 
+2026-06-07 19:09:37 | Processed 1.35e+08 coordinate lines 
+2026-06-07 19:09:54 | Processed 1.4e+08 coordinate lines 
+2026-06-07 19:10:06 | Processed 1.45e+08 coordinate lines 
+2026-06-07 19:10:25 | Processed 1.5e+08 coordinate lines 
+2026-06-07 19:10:37 | Processed 1.55e+08 coordinate lines 
+2026-06-07 19:10:53 | Processed 1.6e+08 coordinate lines 
+2026-06-07 19:11:07 | Processed 1.65e+08 coordinate lines 
+2026-06-07 19:11:10 | Coordinate stream completed: processed 166121193 entries 
+2026-06-07 19:11:10 | Constructing sparse Matrix 

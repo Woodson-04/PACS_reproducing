@@ -1,0 +1,4 @@
+"setting_label","result_dir","n_top_peaks","tested_peaks","fdr_cutoff","significant_batch_peaks","retained_peaks","counts_rds_exists","retained_indices_exists","metadata_exists","retained_has_top_peak_col","can_compute_directly"
+"5000/5000","/home/woodson/PACS_reproducing/results/mouse_kidney_figures/gse157079_p56_pacs_batch_filter_umap",10000,5000,0.05,3140,1860,TRUE,TRUE,TRUE,TRUE,TRUE
+"10000/10000","/home/woodson/PACS_reproducing/results/mouse_kidney_figures/gse157079_p56_pacs_batch_filter_umap_p56_top10000_test10000_fdr005_lsi_saved",10000,10000,0.05,6305,3695,TRUE,TRUE,TRUE,TRUE,TRUE
+"20000/10000","/home/woodson/PACS_reproducing/results/mouse_kidney_figures/gse157079_p56_pacs_batch_filter_umap_p56_top20000_test10000_fdr005",20000,10000,0.05,6208,3792,TRUE,TRUE,TRUE,TRUE,TRUE

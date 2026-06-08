@@ -1,0 +1,23 @@
+<h2>10. GEO Reference 与参数稳定性</h2>
+<h3>10.1 GEO UMAP-space reference</h3>
+<p>GEO precomputed UMAP 可作为 public atlas/reference embedding，但它可能包含 atlas-level preprocessing 或 integration/correction steps，不应解释为 PACS-filtered ground truth。</p>
+<table><thead><tr><th>setting</th><th>UMAP-space normalized score</th></tr></thead><tbody>
+<tr><td>P56 10000/10000 before</td><td>0.02649</td></tr>
+<tr><td>P56 10000/10000 after</td><td>0.65073</td></tr>
+<tr><td>GEO P56 UMAP-space</td><td>0.93903</td></tr>
+</tbody></table>
+<h3>10.2 PCA-logNorm parameter stability</h3>
+<p>参数稳定性部分只使用 PCA-logNorm paper-style normalized batch mixing score，不包含 GEO reference，也不包含 UMAP-space auxiliary metrics。</p>
+<table><thead><tr><th>PC dimensions</th><th>setting</th><th>before</th><th>after</th></tr></thead><tbody>
+<tr><td>PC1:20</td><td>5000/5000</td><td>0.0398</td><td>0.3048</td></tr>
+<tr><td>PC1:20</td><td>10000/10000</td><td>0.0398</td><td>0.2576</td></tr>
+<tr><td>PC1:20</td><td>20000/10000</td><td>0.0295</td><td>0.2391</td></tr>
+<tr><td>PC1:30</td><td>5000/5000</td><td>0.0510</td><td>0.3679</td></tr>
+<tr><td>PC1:30</td><td>10000/10000</td><td>0.0510</td><td>0.3097</td></tr>
+<tr><td>PC1:30</td><td>20000/10000</td><td>0.0398</td><td>0.2928</td></tr>
+<tr><td>PC1:50</td><td>5000/5000</td><td>0.0685</td><td>0.5032</td></tr>
+<tr><td>PC1:50</td><td>10000/10000</td><td>0.0685</td><td>0.4239</td></tr>
+<tr><td>PC1:50</td><td>20000/10000</td><td>0.0556</td><td>0.4097</td></tr>
+</tbody></table>
+<img class="fig-small" alt="P56 PCA-logNorm parameter stability" src="materials/figures/gse157079_p56_pca_space_parameter_stability_scores_replot.png" />
+<p>三组 setting 均显示 after &gt; before，说明 PACS filtering 对 PCA-logNorm space 中 batch mixing 的改善在参数选择上具有稳定性。5000/5000 after score 最高，但 retained peaks 最少，可能更激进；10000/10000 是当前主展示设置，因为它在 batch mixing 与 retained features / cell-type preservation 之间更平衡。</p>

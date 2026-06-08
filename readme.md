@@ -1,76 +1,43 @@
 # PACS 论文复现项目
 
-## 1. 项目目标
+本仓库用于复现 PACS 论文中的关键分析流程，重点围绕 **scATAC-seq 中 batch-effect features 的检测、过滤与 UMAP 重建**。当前项目已经完成两个主要阶段：
 
-本项目目标是复现 PACS 论文中的关键分析流程，并逐步形成可展示、可追踪、可继续扩展的复现项目。
+1. **Notebook 1 benchmark 复现**：复现 PACS 主方法在 real kidney benchmark 中的 Type I error / power workflow。
+2. **GSE157079 mouse kidney reconstruction**：从公开 GSE157079 mouse kidney snATAC 数据出发，完成原始矩阵接入、matrix-derived UMAP、P56 子集 PACS batch-effect peak filtering 与 before/after UMAP 展示。
 
-目前项目分为两个主要阶段：
+当前结果应理解为 **P56 two-batch top10000 setting 下的 Fig.3a–d author-style reconstruction**，不是 PACS 原文 Fig.3 的 exact full reproduction。
 
-1. **Notebook 1 benchmark 复现**：复现作者 Notebook 1 中基于 real kidney data 的 Type I error 和 power workflow。
-2. **mouse kidney / GSE157079 图复现**：从 GSE157079 mouse kidney snATAC 数据出发，转向 PACS 论文中的 batch-effect feature removal UMAP 逻辑。
+---
 
-当前项目主线是 **PACS paper-style reconstruction**，也就是围绕 PACS 论文中“检测 batch-effect features、移除这些 features、重新构建 UMAP”的逻辑推进。项目不是完整复现原始 `dev-kidney-snATAC` atlas；该仓库只作为理解原始 mouse kidney snATAC 数据处理背景的参考。
+## 项目定位
 
-## 2. 项目路径和数据约束
-
-当前项目目录：
+PACS 论文 Fig.3a–d 的核心逻辑是：
 
 ```text
-/home/woodson/PACS_reproducing
+原始 chromatin accessibility features
+→ 使用 PACS 检测 batch-effect features
+→ 移除显著 batch-associated features
+→ 重新构建 UMAP
+→ 比较 batch mixing 与 cell-type structure preservation
 ```
 
-旧项目、参考代码和原始数据目录：
+本项目目前聚焦于 P56 adult-like mouse kidney 子集中的两个 batch：
 
-```text
-/home/woodson/biostatistic/pacs
-```
+| 项目 | 当前设置 |
+|---|---|
+| 数据 | GSE157079 mouse kidney snATAC |
+| 子集 | P56_batch1 + P56_batch2 |
+| 细胞数 | 13,526 |
+| 主 feature universe | top 10,000 detected peaks |
+| PACS 检验 | full: `~ cell_type + batch`; null: `~ cell_type` |
+| FDR cutoff | 0.05 |
+| 当前定位 | Fig.3a–d author-style reconstruction |
 
-重要约束：
+---
 
-- `/home/woodson/biostatistic` 只读，不应修改、移动、删除或覆盖其中任何文件。
-- 不修改已安装的 PACS R 包。
-- 不解压、覆盖或编辑原始 GSE157079 `.gz` 文件。
-- 大型 GSE157079 matrix 文件只通过流式方式读取，不解压到磁盘。
-- 当前项目中的新代码、报告、图和中间结果均保存在 `/home/woodson/PACS_reproducing` 内。
+## 主要结果一：Notebook 1 benchmark
 
-GSE157079 关键数据文件：
-
-```text
-/home/woodson/biostatistic/pacs/GSE157079/GSE157079_snATAC_UMAP_coordinates.csv.gz
-/home/woodson/biostatistic/pacs/GSE157079/GSE157079_snATAC_metadata.csv.gz
-/home/woodson/biostatistic/pacs/GSE157079/GSE157079_snATAC_peak_list.csv.gz
-/home/woodson/biostatistic/pacs/GSE157079/GSE157079_snATAC_cell_by_peak_matrix.txt.gz
-```
-
-## 3. AI 辅助与个人工作说明
-
-本项目采用人机协作方式推进，较多使用了 ChatGPT 和 Codex。为了保证学术沟通中的透明性，这里明确说明各方角色。
-
-ChatGPT 和 Codex 在项目中承担了大量辅助工作，包括复现路线规划、代码设计、R 脚本撰写、错误分析、调试建议、文件整理、报告初稿生成、结果解释框架整理和后续任务拆解。Codex 主要参与代码实现、脚本修改、项目结构整理、报告文件生成和命令执行建议；ChatGPT 主要参与研究路线讨论、统计和生物信息学解释、结果总结和汇报材料组织。
-
-本人主要负责研究方向选择、复现目标确定、科学主线判断、数据路径和运行环境提供、关键 Linux/R 命令的实际运行、输出结果检查、是否调整路线的决策，以及面向老师的汇报和科学解释。也就是说，AI 工具承担了较多实现和组织层面的工作，但研究问题选择、结果核验、路线取舍和最终解释由本人负责。
-
-因此，本项目应被理解为一个 **human-AI collaborative reproduction workflow**。后续汇报中会明确说明 AI 辅助的范围，既不夸大个人手工编码贡献，也不把研究工作表述为 AI 独立完成。
-
-## 4. 第一阶段：Notebook 1 benchmark 复现
-
-主脚本：
-
-```text
-q.r
-```
-
-large benchmark run 参数：
-
-```text
-n_repeat = 5
-n_cell_sample = 500
-n_features_sample = 10000
-run_baselines = TRUE
-output_dir = results/20260526_2318_large_baseline
-```
-
-结果摘要：
+PACS 主方法在 large benchmark run 中达到较好的 Type I error 控制与 power。baseline 方法为 clean-room reimplementation，因为作者原始 baseline helper 文件未能定位。
 
 | method | Type I error | power | 说明 |
 |---|---:|---:|---|
@@ -80,126 +47,128 @@ output_dir = results/20260526_2318_large_baseline
 | snapATAC | 0.01810 | 0.76094 | clean-room edgeR-style baseline |
 | fisher | 0.02208 | 0.76630 | binary Fisher exact test |
 
-解释：
+![Notebook 1 benchmark](figures/mouse_kidney/pacs_benchmark_t1e_power_barplot.png)
 
-- PACS 主方法结果与作者 Notebook 1 数值接近，可以说明 PACS benchmark workflow 已基本复现。
-- baseline 方法不能声称完全复现作者原始 baseline，因为作者 helper 文件 `other_methods_for_differential_updated.R` 未找到。
-- 当前 baseline 是 clean-room reimplementation，应在汇报中标注为近似/重实现版本。
-- PACS 0.2.2 中 `pacs_test_sparse()` 存在 mixed cumulative/logit branch 的 `rownames` 合并 bug。`q.r` 中实现了本地 fixed wrapper，直接调用 `pacs_test_cumu()` 和 `pacs_test_logit()` 后安全合并 p value。
+---
 
-## 5. 第二阶段：GSE157079 mouse kidney 图复现
+## 主要结果二：GSE157079 原始矩阵接入
 
-GSE157079 metadata、UMAP、peak list 和 matrix 文件已经接入项目。
+已确认 GSE157079 metadata、peak list 与 cell-by-peak MatrixMarket 稀疏矩阵对齐。
 
-标准化后的 metadata 输出：
+| 对象 | 数值 |
+|---|---:|
+| cells | 28,316 |
+| peaks | 300,755 |
+| nonzero entries | 166,121,193 |
+| metadata rows | 28,316 |
+| peak list rows | 300,755 |
+| matrix orientation | cell × peak |
 
-```text
-results/mouse_kidney_figures/gse157079_metadata_merged.csv
-```
+关键修复包括：
 
-标准列：
+- 使用 `row_index` 合并 metadata 与 GEO UMAP coordinates。
+- 不将 10x-style `cell_barcode` 作为全局唯一键，因为 barcode 可跨 sample 重复。
+- 大型 `.gz` matrix 文件通过流式方式读取，不解压原始数据。
 
-```text
-row_index
-cell_barcode
-sample
-cell_type
-umap_1
-umap_2
-```
+---
 
-重要修复：
+## 主要结果三：从原始矩阵重建 all-cell top-peak UMAP
 
-- 修复了 `data.table` 下用 `df[row, col]` 导致列索引解释错误的问题。
-- 原始 CSV 第一列为空列名，已标准化为 `row_index`。
-- 10x-style `cell_barcode` 在不同 sample 间可能重复，因此不把 barcode 作为全局唯一键；metadata 和 UMAP 用 `row_index` 合并，`sample + cell_barcode` 只作为 sanity check。
+从 GSE157079 原始 cell-by-peak matrix 出发，使用 top 20,000 detected peaks 完成 TF-IDF / LSI / UMAP 重建。该结果不是 all-features UMAP，也不是 PACS-filtered UMAP，而是用于验证 matrix-derived pipeline 可行性的 all-cell top-peak reference embedding。
 
-matrix alignment smoke test 结果：
+| 项目 | 数值 |
+|---|---:|
+| cells | 28,316 |
+| selected top peaks | 20,000 |
+| retained nonzeros | 85,801,336 |
+| sparse matrix | 28,316 × 20,000 |
+| LSI dimension | 28,316 × 50 |
+| UMAP input | LSI_2:LSI_30 |
 
-```text
-matrix = 28316 cells x 300755 peaks
-nonzero entries = 166121193
-metadata rows = 28316
-peak list rows = 300755
-orientation = cell x peak
-```
+<p align="center">
+  <img src="figures/mouse_kidney/gse157079_all_cells_top_peaks_lsi_umap_by_sample.png" width="48%" />
+  <img src="figures/mouse_kidney/gse157079_all_cells_top_peaks_lsi_umap_by_celltype.png" width="48%" />
+</p>
 
-报告：
+完整 all-features UMAP 已尝试运行，但在完整读取 166,121,193 个非零坐标后，于 sparse Matrix 构建阶段被系统终止，推测主要原因是内存压力。因此当前报告与 README 均将该结果表述为 **all-cell top-peak matrix-derived UMAP**。
 
-```text
-results/mouse_kidney_figures/gse157079_matrix_alignment_smoke_test.md
-```
+---
 
-GEO precomputed UMAP 已绘制为 overview 图，但它不等同于 PACS 论文中 all-feature vs PACS-filtered UMAP。后续主线使用 matrix-derived embedding，而不是直接使用 GEO 的 `umap_1` / `umap_2`。
+## 主要结果四：P56 PACS batch-effect peak filtering
 
-## 6. Matrix-derived LSI/UMAP 当前进展
+P56 子集包含两个 batch，适合在同一发育时期背景下检测批次效应相关 peaks，避免将 P0/P21/P56 发育差异误解释为技术 batch effect。
 
-pilot 脚本：
+| 项目 | 数值 |
+|---|---:|
+| P56 cells | 13,526 |
+| P56_batch1 | 7,129 |
+| P56_batch2 | 6,397 |
+| cell types | 15 |
+| n_top_peaks | 10,000 |
+| tested peaks | 10,000 |
+| significant batch peaks | 6,305 |
+| retained peaks | 3,695 |
+| FDR cutoff | 0.05 |
 
-```text
-scripts/mouse_kidney_figures/05_pilot_gse157079_lsi_umap_from_matrix.R
-```
+当前主图为 P56 before/after UMAP 四联图：
 
-该脚本使用抽样 cells 和随机 peaks，从 MatrixMarket 文件流式构建 sparse matrix，并完成 TF-IDF / LSI / UMAP。
-
-all-cell top-peak 脚本：
-
-```text
-scripts/mouse_kidney_figures/06_all_cells_top_peaks_lsi_umap_from_matrix.R
-```
-
-当前最佳结果：
-
-```text
-all cells = 28316
-top detected peaks = 20000
-retained nonzeros = 85801336
-sparse matrix = 28316 x 20000
-LSI = 28316 x 50
-UMAP uses LSI dims 2:30
-```
-
-输出图：
-
-```text
-figures/mouse_kidney/gse157079_all_cells_top_peaks_lsi_umap_by_sample.png
-figures/mouse_kidney/gse157079_all_cells_top_peaks_lsi_umap_by_celltype.png
-```
+![P56 PACS before/after UMAP four-panel](figures/mouse_kidney/gse157079_p56_pacs_batch_filter_four_panel.png)
 
 解释：
 
-- sample-colored UMAP 显示明显 sample-associated structure，说明 batch/sample effect 仍然存在。
-- cell-type-colored UMAP 仍保留一定生物学结构。
-- 这组图可以作为当前 **before-filtering baseline**，为下一步 PACS batch-effect feature removal 做参照。
+- before by batch：P56_batch1 与 P56_batch2 呈现明显 batch separation。
+- after by batch：移除 PACS-significant batch peaks 后 batch separation 减弱。
+- before/after by cell type：用于检查 biological cell-type structure 是否仍然保留。
 
-## 7. 当前可展示成果
+---
 
-建议会议展示材料：
+## 主要结果五：normalized batch mixing score
 
-1. `results/project_progress_summary_for_teacher.md`
-2. `results/20260526_2318_large_baseline/summary.csv`
-3. `figures/mouse_kidney/pacs_benchmark_t1e_power_barplot.png`
-4. `figures/mouse_kidney/pacs_permuted_qq_plot.png`
-5. `results/mouse_kidney_figures/gse157079_matrix_alignment_smoke_test.md`
-6. `figures/mouse_kidney/gse157079_all_cells_top_peaks_lsi_umap_by_sample.png`
-7. `figures/mouse_kidney/gse157079_all_cells_top_peaks_lsi_umap_by_celltype.png`
-8. `results/mouse_kidney_figures/gse157079_all_cells_top_peaks_lsi_umap/all_cells_top_peaks_lsi_umap_report.md`
+为避免仅凭 UMAP 视觉判断，本项目在三个坐标空间中计算 paper-style normalized batch mixing score。
 
-## 8. 下一步计划
+| 坐标空间 | before | after | 解释 |
+|---|---:|---:|---|
+| PCA-logNorm PC1:30 | 0.0510 | 0.3097 | 最接近原文 normalized PCA mixing 的主指标 |
+| PCA-logNorm PC1:50 | 0.0685 | 0.4239 | PCA 维度敏感性结果 |
+| LSI_2:30 | 0.0520 | 0.3343 | scATAC-aware supporting metric |
+| UMAP-space | 0.02649 | 0.65073 | visualization-level auxiliary metric |
 
-下一步技术路线：
+![PCA/LSI/UMAP normalized batch mixing score](figures/mouse_kidney/gse157079_p56_10000_pca_lsi_umap_paper_style_score_comparison.png)
 
-1. 使用 PACS 在 GSE157079 中检测 batch-associated peaks。
-2. 移除显著 batch-effect peaks。
-3. 用过滤后的 feature set 重新计算 TF-IDF / LSI / UMAP。
-4. 构建 before/after 四联图：
-   - before by sample；
-   - after by sample；
-   - before by cell type；
-   - after by cell type。
-5. 比较移除 batch-effect peaks 后 sample-associated structure 是否减弱，同时 cell-type biological structure 是否保留。
+三类空间均显示 PACS filtering 后 batch mixing score 提高，说明改善并不只是 UMAP visualization artifact。
 
-## 9. 目录说明
+---
+
+## 主要结果六：LSI_1-depth QC
+
+LSI_1 与细胞测序深度高度相关，因此在 LSI-space mixing score 中排除 LSI_1，使用 LSI_2:30 作为主要 LSI 空间是有依据的。
+
+| stage | component | Spearman(depth) | Pearson(depth) |
+|---|---|---:|---:|
+| before | LSI_1 | -0.9983 | -0.9739 |
+| after | LSI_1 | 0.9976 | 0.9830 |
+
+![LSI depth correlation QC](figures/mouse_kidney/gse157079_p56_lsi_depth_correlation_before_after.png)
+
+---
+
+## 当前结论
+
+在 P56 two-batch top10000 setting 中，PACS 在控制 cell type 后识别出大量 batch-associated accessibility peaks。移除这些 peaks 后，batch mixing 在 PCA-logNorm、LSI 与 UMAP 三类坐标空间中均显著改善，同时细胞类型结构仍然具有可解释性。当前结果支持 PACS 用于真实 snATAC 数据中 batch-effect feature detection 与 filtering 的核心逻辑。
+
+需要注意：当前结果仍是 **P56-only、top-peak、depth-derived cap_rates** 条件下的阶段性 reconstruction，不直接等同于作者完整 Fig.3。
+
+---
+
+## AI 辅助与个人工作说明
+
+本项目采用 **human-AI collaborative reproduction workflow**。ChatGPT 和 Codex 主要辅助复现路线规划、代码撰写、错误分析、脚本整理、报告初稿和图表组织；本人负责研究问题选择、复现目标确定、运行环境维护、关键 Linux/R 命令执行、结果核验、参数决策、科学解释和最终汇报把关。
+
+该说明旨在保证学术沟通中的透明性：AI 工具承担了较多实现和组织层面的工作，但研究路线取舍、结果判断和最终解释由本人负责。
+
+---
+
+## 目录说明
 
 ```text
 scripts/
@@ -211,28 +180,30 @@ scripts/
 scripts/mouse_kidney_figures/
 ```
 
-GSE157079 intake、matrix alignment、matrix-derived UMAP 和后续 mouse kidney figure reconstruction 脚本。
+GSE157079 intake、matrix alignment、matrix-derived UMAP、P56 PACS filtering 和 batch mixing quantification 脚本。
 
 ```text
 results/
 ```
 
-Notebook 1 benchmark 结果、GSE157079 中间结果、报告和会议用总结。
+Notebook 1 benchmark、GSE157079 中间结果、定量报告和阶段性总结。
 
 ```text
 figures/mouse_kidney/
 ```
 
-mouse kidney 相关图，包括 GEO UMAP、matrix-derived pilot UMAP 和 all-cell top-peak UMAP。
+Notebook 1 图、GSE157079 UMAP、P56 PACS before/after UMAP 和定量指标图。
 
 ```text
-meeting_materials_20260530/
+report/pdf_report/
 ```
 
-会议用材料目录，包含精简报告、图和表格。
+阶段性中文报告、HTML/PDF 渲染文件及报告材料。
 
-```text
-archive_pre_meeting_cleanup_20260530/
-```
+---
 
-会前整理归档目录。当前环境下未强制删除文件；归档操作应在确认后执行。
+## 后续计划
+
+1. 继续完善 Fig.3a–d：更接近作者的 adult kidney setting、feature universe 与 PCA preprocessing。
+2. 推进 Fig.3e/f：PCT/PST-specific peaks、peak-to-gene annotation、IGV-like track 和 scRNA expression heatmap。
+3. 在更大内存环境下尝试 true all-features UMAP，或明确将 top-peak reconstruction 作为 computationally tractable approximation。

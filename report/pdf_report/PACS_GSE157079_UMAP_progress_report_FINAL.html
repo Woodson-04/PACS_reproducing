@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>PACS 复现项目阶段报告</title>
+<link href="report_style.css" rel="stylesheet"/>
+<script>
+    window.MathJax = {
+      tex: { inlineMath: [["\\(","\\)"]], displayMath: [["$$","$$"]] },
+      svg: { fontCache: "global" }
+    };
+  </script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+    /* Final PDF layout overrides: compact figures and booktabs-like tables. */
+    table {
+      border-collapse: collapse;
+      border-top: 2px solid #111827;
+      border-bottom: 2px solid #111827;
+      margin: 10px 0 16px 0;
+      font-size: 0.88em;
+    }
+    th, td {
+      border: 0 !important;
+      padding: 4px 7px;
+    }
+    thead tr {
+      border-bottom: 1.3px solid #111827;
+    }
+    tbody tr + tr {
+      border-top: 0;
+    }
+    img {
+      margin-top: 8px;
+      margin-bottom: 16px;
+    }
+    .fig-compact {
+      max-width: 68%;
+    }
+    .fig-small {
+      max-width: 92%;
+    }
+    .fig-wide {
+      max-width: 100%;
+    }
+    .figure-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      align-items: start;
+      margin: 8px 0 18px 0;
+    }
+    .figure-row img {
+      width: 100%;
+      margin: 0;
+    }
+    .figure-analysis {
+      display: grid;
+      grid-template-columns: 42% 58%;
+      gap: 18px;
+      align-items: center;
+      margin: 8px 0 18px 0;
+    }
+    .figure-analysis img {
+      width: 100%;
+      margin: 0;
+    }
+    .analysis-box {
+      font-size: 0.94em;
+      line-height: 1.62;
+      background: #f7f9fb;
+      border-left: 4px solid #5b708b;
+      padding: 8px 12px;
+    }
+    @media print {
+      .fig-compact { max-width: 62%; }
+      .fig-small { max-width: 88%; }
+      .figure-row { gap: 10px; }
+      .figure-analysis { grid-template-columns: 40% 60%; gap: 14px; }
+    }
+  
+
+    /* Caption and compact layout refinements */
+    .table-title {
+      font-size: 0.92em;
+      font-weight: 600;
+      color: #374151;
+      margin: 10px 0 4px 0;
+      line-height: 1.35;
+    }
+    .fig-caption {
+      font-size: 0.90em;
+      color: #374151;
+      line-height: 1.42;
+      margin-top: 5px;
+      text-align: center;
+    }
+    .figure {
+      margin: 8px 0 18px 0;
+      text-align: center;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .figure img {
+      display: block;
+      margin: 0 auto;
+    }
+    .notebook-figure-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      align-items: start;
+      margin: 8px 0 12px 0;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .notebook-figure-row .figure {
+      margin: 0;
+      min-width: 0;
+    }
+    .notebook-figure-row img {
+      width: 100%;
+      height: 270px;
+      object-fit: contain;
+      margin: 0 auto;
+      display: block;
+    }
+    .fig-medium img {
+      max-width: 72%;
+    }
+    @media print {
+      .table-title, .fig-caption {
+        font-size: 0.88em;
+      }
+      .notebook-figure-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .notebook-figure-row img {
+        height: 235px;
+      }
+      .fig-medium img {
+        max-width: 70%;
+      }
+    }
+</style>
+</head>
+<body>
+<h1>PACS 复现项目阶段报告：GSE UMAP 重建与 P56 批次效应特征去除</h1>
+<p><strong>日期：</strong> 2026-06-07</p>
+<p><strong>当前定位：</strong> 阶段性 reconstruction。</p>
+<p><strong>项目仓库：</strong> https://github.com/Woodson-04/PACS_reproducing</p>
+<p>本报告总结 PACS Notebook 1 benchmark 复现、GSE157079 小鼠肾脏 snATAC 数据接入、原始稀疏矩阵 UMAP 重建，以及 P56 两个批次的 batch-effect peak filtering 结果。全部结论来自已有输出文件。</p>
+<h2>摘要与核心结果表</h2>
+<p>本阶段首先复现 PACS 作者 Notebook 1 real kidney data benchmark，PACS 主方法达到 Type I error = 0.04008、power = 0.83337，说明主统计检验 workflow 已基本复现。随后接入公开 GSE157079 mouse kidney snATAC 数据，确认 cell-by-peak 稀疏矩阵大小(cells x peaks)。基于原始矩阵完成 all-cell TF-IDF/LSI/UMAP 重建，并在 P56 发育时期子集中使用 PACS 检测 batch-effect peaks(top10000 setting) ，PACS 过滤后umap作图，并使用三类混合指标(PCA-logNorm、LSI-space 与 UMAP-space)衡量批次效应，均显示过滤后 batch mixing 显著改善。</p>
+<div class="table-title">表 1. 项目当前核心结果概览。</div><table><thead><tr><th>模块</th><th>核心结果</th></tr></thead><tbody>
+<tr><td>Notebook 1 PACS benchmark</td><td>Type I error = 0.04008；power = 0.83337</td></tr>
+<tr><td>GSE157079 matrix</td><td>28316 cells x 300755 peaks；166121193 nonzero entries</td></tr>
+<tr><td>all-cell UMAP</td><td>top 20000 peaks；retained nonzeros = 85801336</td></tr>
+<tr><td>P56 subset</td><td>13526 cells；P56_batch1 = 7129；P56_batch2 = 6397</td></tr>
+<tr><td>PACS filtering</td><td>tested peaks = 10000；significant batch peaks = 6305；retained peaks = 3695</td></tr>
+<tr><td>PCA-logNorm PC1:30</td><td>normalized score: 0.0510 → 0.3097</td></tr>
+<tr><td>LSI_2:30</td><td>normalized score: 0.0520 → 0.3343</td></tr>
+<tr><td>UMAP-space</td><td>normalized score: 0.02649 → 0.65073</td></tr>
+</tbody></table>
+<h2>1. 复现目标与边界</h2>
+<p>本项目目标是进行 PACS 方法学复现，并在 GSE157079 小鼠肾脏 snATAC 数据上构建 PACS paper-style UMAP reconstruction。当前重点不是完整重建原始 dev-kidney-snATAC atlas，而是验证 PACS 是否能在真实 snATAC 数据中识别并过滤批次效应相关特征。</p>
+<div class="table-title">表 2. PACS 原文 Fig.3a–d 目标与当前复现边界。</div><table><thead><tr><th>项目</th><th>PACS 原文 Fig.3a–d 目标</th><th>当前复现状态</th></tr></thead><tbody>
+<tr><td>数据</td><td>mouse kidney snATAC</td><td>GSE157079 public files</td></tr>
+<tr><td>分析对象</td><td>batch-effect feature filtering 前后 UMAP</td><td>P56 two-batch subset</td></tr>
+<tr><td>特征范围</td><td>作者设定的 feature universe</td><td>top10000 tested peaks</td></tr>
+<tr><td>batch 检验</td><td>控制生物学协变量后检测 batch effect</td><td>full: <code>~ cell_type + batch</code>; null: <code>~ cell_type</code></td></tr>
+<tr><td>图像定位</td><td>Fig.3a–d</td><td>Fig.3a–d author-style reconstruction</td></tr>
+</tbody></table>
+<p>当前边界包括：只使用P56数据处理，为对其他发育时期细胞处理；top10000 peaks有一定稳定性，但毕竟和作者的不一样</p>
+<h2>2. Notebook 1 Benchmark：统计检验与复现结果</h2>
+<h3>2.1 PACS 检验的统计检验逻辑</h3>
+<p>对 feature \(g\) 与 cell \(i\)，设 \(Y_{gi}\) 为 accessibility observation，\(q_i\) 为 cell-specific depth/capture-related factor，\(X_i\) 为协变量。</p>
+<p>Null 与 full model 可抽象表示为：</p>
+$$M_{0,g}: Y_g \sim \text{depth/capture correction} + \text{covariates}$$
+$$M_{1,g}: Y_g \sim \text{depth/capture correction} + \text{covariates} + \text{tested factor}$$
+<p>对应假设为：</p>
+$$H_0: \beta_{g,\text{tested factor}} = 0$$
+<p>每个 feature 输出 p-value \(p_g\)，并通过 Benjamini-Hochberg procedure 得到 \(\mathrm{FDR}_g = \mathrm{BH}(p_g)\)。benchmark 指标为：</p>
+$$\widehat{\mathrm{T1E}} = \frac{\#\{g \in H_0: p_g \le \alpha\}}{\#\{g \in H_0\}}$$
+$$\widehat{\mathrm{Power}} = \frac{\#\{g \in H_1: p_g \le \alpha\}}{\#\{g \in H_1\}}$$
+$$\overline{\mathrm{T1E}} = \frac{1}{R}\sum_{r=1}^{R}\widehat{\mathrm{T1E}}_r,\quad
+\overline{\mathrm{Power}} = \frac{1}{R}\sum_{r=1}^{R}\widehat{\mathrm{Power}}_r$$
+<div class="table-title">表 3. Notebook 1 benchmark 中不同方法的 Type I error 与 power。</div><table>
+<thead><tr><th>Metric</th><th>PACS / our</th><th>Seurat</th><th>ArchR</th><th>snapATAC</th><th>Fisher</th></tr></thead>
+<tbody>
+<tr><td>Type I error</td><td>0.04008</td><td>0.06342</td><td>0.04096</td><td>0.01810</td><td>0.02208</td></tr>
+<tr><td>Power</td><td>0.83337</td><td>0.82344</td><td>0.67437</td><td>0.76094</td><td>0.76630</td></tr>
+<tr><td>Description</td><td>PACS main method</td><td>clean-room baseline</td><td>clean-room approximation</td><td>clean-room edgeR-style baseline</td><td>binary Fisher exact test</td></tr>
+</tbody>
+</table>
+
+<div class="notebook-figure-row">
+<div class="figure">
+<img alt="Notebook 1 benchmark" src="materials/figures/pacs_benchmark_t1e_power_barplot.png"/>
+<div class="fig-caption">图 1. Notebook 1 benchmark 中不同方法的 Type I error 与 power。</div>
+</div>
+<div class="figure">
+<img alt="Permuted-label QQ plot" src="materials/figures/pacs_permuted_qq_plot.png"/>
+<div class="fig-caption">图 2. permutation/null setting 下 PACS p-value 的 QQ plot。</div>
+</div>
+</div>
+
+<div class="analysis-box">
+<strong>QQ plot 解读。</strong> 
+  permuted-label setting 对应 Type I error 检验。PACS p-value 在零假设下整体接近理论均匀分布，说明主方法的假阳性控制处于合理范围。该图与 Type I error = 0.04008 共同支持 Notebook 1 主 workflow 的统计校准。</div>
+<p>PACS 主方法的 Type I error 接近 0.05，power 与作者 notebook 结果接近。由于作者原始 baseline helper 文件不可用，baseline 结果为 clean-room reimplemented comparisons。</p>
+<h2>3. GSE157079 数据接入与矩阵对齐</h2>
+<p>GSE157079 public files 包含 metadata、precomputed UMAP coordinates、peak list 与 cell-by-peak MatrixMarket sparse matrix。</p>
+<div class="table-title">表 4. GSE157079 矩阵、metadata 与 peak list 对齐结果。</div><table><thead><tr><th>Cells</th><th>Peaks</th><th>Nonzero entries</th><th>Metadata rows</th><th>Peak list rows</th><th>Matrix orientation</th></tr></thead><tbody>
+<tr><td>28316</td><td>300755</td><td>166121193</td><td>28316</td><td>300755</td><td>cell x peak</td></tr>
+</tbody></table>
+<p>metadata 标准字段包括 <code>row_index</code>、<code>cell_barcode</code>、<code>sample</code>、<code>cell_type</code>、<code>umap_1</code> 与 <code>umap_2</code>。其中 <code>row_index</code> 用于合并 metadata 与 GEO UMAP coordinates。</p>
+<div class="table-title">表 5. GSE157079 各 sample 的细胞数量。</div><table><thead><tr><th>P56_batch1</th><th>P56_batch2</th><th>P0_batch1</th><th>P0_batch2</th><th>P21_batch1</th></tr></thead><tbody>
+<tr><td>7129</td><td>6397</td><td>5993</td><td>5436</td><td>3361</td></tr>
+</tbody></table>
+<h2>4. 从原始矩阵重建 All-Cell Top-Peak UMAP：数学原理与实现</h2>
+<p>本节在不依赖 GEO 预计算 UMAP 坐标的情况下，直接从 GSE157079 原始 MatrixMarket cell-by-peak 稀疏矩阵出发，完成 feature selection、TF-IDF、LSI 与 UMAP 的重建流程。需要强调的是，本节使用的是全体细胞和 detection count 最高的 20,000 个 peaks，不是 all-features UMAP。</p>
+<p>设原始稀疏 cell-by-peak 矩阵为\(X \in \mathbb{R}^{n \times p}\)，其中 \(n = 28316\) 表示细胞数，\(p = 300755\) 表示 peak 数。由于完整 all-feature 矩阵规模较大，跑all-features我的linux虚拟机内存和存储不够，本阶段先根据 peak detection count 选择前 \(K = 20000\) 个 peaks，得到子矩阵\(X^{(K)} \in \mathbb{R}^{n \times K}\)。因此，以下降维分析非全部 \(300755\) 个 peaks。</p>
+<p>对细胞 \(i\) 和 peak \(j\)，首先计算 term frequency：</p>
+$$\mathrm{TF}_{ij} = \frac{X_{ij}}{\sum_l X_{il}}$$
+<p>其中分母表示细胞 \(i\) 在所选 peaks 上的总 accessibility counts。随后定义 peak \(j\) 的 detection frequency：</p>
+$$\mathrm{df}_j = \sum_i \mathbf{1}(X_{ij} &gt; 0)$$
+<p>并据此计算 inverse document frequency：</p>
+$$\mathrm{IDF}_j = \log\left(1 + \frac{n}{\mathrm{df}_j}\right)$$
+<p>TF-IDF 转换后的矩阵记为：</p>
+$$Z_{ij} = \mathrm{TF}_{ij}\mathrm{IDF}_j$$
+<p>实际计算中进一步进行 log scaling：</p>
+$$Z'_{ij} = \log(1 + cZ_{ij})$$
+<p>其中 \(c\) 为缩放常数。随后对 \(Z'\) 进行截断奇异值分解，得到 LSI 低维表示：</p>
+$$Z'\approx U_r \Sigma_r V_r^\top,\qquad L = U_r\Sigma_r$$
+<p>本阶段取 \(r = 50\)，并使用 \(LSI_2:LSI_{30}\) 作为 UMAP 输入。排除 \(LSI_1\) 的原因在后文 LSI-depth QC 中进一步验证：在本数据中，\(LSI_1\) 与细胞测序深度高度相关，因此更适合作为 depth/QC 相关轴，而不作为主要 batch mixing 评价空间。</p>
+<p>UMAP 在 LSI space 中构建近邻图，并优化二维布局\(Y \in \mathbb{R}^{n \times 2}\)，使低维空间中的邻域关系尽量保持高维 LSI 空间中的局部结构。</p>
+<div class="table-title">表 6. All-cell top-peak UMAP 的矩阵规模与降维设置。</div><table>
+<thead>
+<tr>
+<th>Cells</th>
+<th>Selected top peaks</th>
+<th>Retained nonzeros</th>
+<th>Sparse matrix dimension</th>
+<th>LSI dimension</th>
+<th>UMAP input</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>28316</td>
+<td>20000</td>
+<td>85801336</td>
+<td>28316 × 20000</td>
+<td>28316 × 50</td>
+<td>LSI_2:LSI_30</td>
+</tr>
+</tbody>
+</table>
+<div class="figure-row">
+<div class="figure">
+<img alt="All-cell top-peak matrix-derived UMAP by sample" src="materials/figures/gse157079_all_cells_top_peaks_lsi_umap_by_sample.png"/>
+<div class="fig-caption">
+      图 3a. 从原始 cell-by-peak 矩阵重建的 all-cell top-peak UMAP，按 sample 着色。
+    </div>
+</div>
+<div class="figure">
+<img alt="All-cell top-peak matrix-derived UMAP by cell type" src="materials/figures/gse157079_all_cells_top_peaks_lsi_umap_by_celltype.png"/>
+<div class="fig-caption">
+      图 3b. 同一 embedding 按 cell type 着色，显示主要细胞类型结构。
+    </div>
+</div>
+</div>
+<p>该 all-cell top-peak UMAP 显示出 sample-associated structure，同时保留明显的cell-type structure。该结果的作用是提供全细胞层面的参考图，这为后续选取P56作为batch效应消除对象提供直观原因参考。</p>
+<p>再次说明，这一结果不等同于 PACS 过滤前的 P56 before UMAP。我的Fig.3论文图复现是在后续 P56 子集上分别基于 top 10,000 peaks 和 PACS-retained peaks重新计算得到的 embedding。</p>
+<div class="analysis-box">
+  完整使用全部 300,755 个 peaks 的 all-features UMAP已尝试运行，但在完整读取 166,121,193 个非零坐标后，于 sparse Matrix 构建阶段被系统终止，推测主要原因是内存压力。因此，当前报告将本节结果表述为all-cell top-peak matrix-derived UMAP，而不将其称为 all-features UMAP。</div>
+<h2>5. P56 子集与 PACS Batch-Effect Peak Filtering</h2>
+<p>选择 P56 subset 的原因是 P56 具有两个 batch，且两组细胞数量均较充足，可在同一年龄背景下检测批次效应相关特征，避免将 P0/P21/P56 的发育差异误解释为技术 batch effect。</p>
+<div class="table-title">表 7. P56 子集的 batch 与 cell-type 概况。</div><table><thead><tr><th>P56 cells</th><th>P56_batch1</th><th>P56_batch2</th><th>Cell types</th></tr></thead><tbody>
+<tr><td>13526</td><td>7129</td><td>6397</td><td>15</td></tr>
+</tbody></table>
+$$M_{0,g}: Y_g \sim \mathrm{cell\_type}$$
+$$M_{1,g}: Y_g \sim \mathrm{cell\_type} + \mathrm{batch}$$
+<p>在 R formula 中对应 <code>formula_null = ~ cell_type</code> 与 <code>formula_full = ~ cell_type + batch</code>。控制 <code>cell_type</code> 的目的是避免将细胞类型组成差异误判为 batch effect。</p>
+<div class="table-title">表 8. P56 PACS batch-effect peak filtering 的主设置与输出矩阵。</div><table><thead><tr><th>n_top_peaks</th><th>Tested peaks</th><th>Significant batch peaks</th><th>Retained peaks</th><th>FDR cutoff</th><th>Before matrix</th><th>After matrix</th></tr></thead><tbody>
+<tr><td>10000</td><td>10000</td><td>6305</td><td>3695</td><td>0.05</td><td>13526 x 10000</td><td>13526 x 3695</td></tr>
+</tbody></table>
+<p>由于公开 GSE157079 文件不包含作者 Notebook 1 中使用的 <code>q_vec</code>，本阶段 <code>cap_rates</code> 使用 depth-derived approximation。</p>
+<h2>6. Fig.3a–d Author-Style UMAP 四联图</h2>
+<p>下图为 P56 two-batch top10000 setting 下的 Fig.3a–d author-style reconstruction：</p>
+<div class="figure fig-wide"><img alt="P56 PACS before/after UMAP four-panel" class="fig-wide" src="materials/figures/gse157079_p56_pacs_batch_filter_four_panel.png"/><div class="fig-caption">图 4. P56 子集 PACS filtering 前后 UMAP 四联图，分别按 batch 与 cell type 着色。</div></div>
+<p>before by batch 显示 P56_batch1 与 P56_batch2 呈现明显 batch separation；after by batch 显示移除 PACS-significant batch peaks 后 batch separation 减弱。before / after by cell type 用于评估 cell-type structure 是否得到保留。UMAP aspect ratio 与 global shape 不固定，与作者图差异可能来自 cell subset、feature universe、UMAP initialization/parameters 以及 plotting panel settings。</p>
+<h2>7. Normalized Batch Mixing Score：数学定义</h2>
+<p>对 cell \(i\)，设 batch label 为 \(b_i\)，\(k\)-nearest neighbors 为 \(N_k(i)\)。cell-level score 为：</p>
+$$s_i = \frac{1}{k}\sum_{j \in N_k(i)} I(b_j \ne b_i)$$
+<p>observed score 为：</p>
+$$S_{\mathrm{obs}} = \frac{1}{n}\sum_i s_i$$
+<p>设 \(m_{ab}\) 表示 cell type \(a\)、batch \(b\) 下的 cell 数。给定细胞类型组成下的随机混合期望为：</p>
+$$S_{\mathrm{exp}} = \frac{1}{n}\sum_a\sum_b m_{ab}\left(\frac{\sum_{d \ne b}m_{ad}}{\sum_d m_{ad}}\right)$$
+<p>normalized batch mixing score 为：</p>
+$$S_{\mathrm{norm}} = \frac{S_{\mathrm{obs}}}{S_{\mathrm{exp}}}$$
+<p>\(S_{\mathrm{norm}}\) 接近 0 表示强 batch separation；接近 1 表示在给定 cell-type composition 下接近随机混合。batch mixing 越高通常越好，但必须同时考虑 cell-type preservation。</p>
+<h2>8. 三层定量指标：PCA-logNorm、LSI 与 UMAP</h2>
+<p>
+为避免仅凭二维 UMAP 图形判断 PACS filtering 效果，本报告在三个不同坐标空间中计算
+paper-style normalized batch mixing score。三类空间的作用不同：PCA-logNorm 最接近
+PACS 原文中的 normalized PCA mixing；LSI_2:30 是适用于 scATAC-seq 稀疏 accessibility
+矩阵的补充低维空间；UMAP-space 则仅作为 visualization-level 的辅助指标。
+</p>
+<div class="table-title">表 9. 三层定量指标的坐标空间、数学对象与用途。</div><table>
+<thead>
+<tr>
+<th>指标层级</th>
+<th>数学对象</th>
+<th>解释</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PCA-logNorm</td>
+<td>log-normalized peak matrix 的 PCA score</td>
+<td>最接近 PACS paper normalized PCA mixing 的 author-like metric</td>
+<td>主指标</td>
+</tr>
+<tr>
+<td>LSI_2:30</td>
+<td>TF-IDF 矩阵的 truncated SVD score</td>
+<td>scATAC-aware low-dimensional representation</td>
+<td>支持指标</td>
+</tr>
+<tr>
+<td>UMAP-space</td>
+<td>由高维邻域图优化得到的二维 embedding</td>
+<td>visualization-level embedding</td>
+<td>辅助指标</td>
+</tr>
+</tbody>
+</table>
+<h3>8.1 PCA-logNorm 空间</h3>
+<p>
+设过滤前或过滤后的 cell-by-peak count matrix 为 \(X \in \mathbb{R}^{n \times p}\)。
+首先对 accessibility counts 进行二值化，得到
+\(B_{ij}=\mathbf{1}(X_{ij}&gt;0)\)。记第 \(i\) 个细胞的 library size 为
+\(d_i=\sum_j B_{ij}\)，并以中位数深度 \(d_{\mathrm{med}}\) 作为缩放基准，则
+library-size normalized matrix 可写为：
+</p>
+$$
+\widetilde{X}_{ij}
+=
+\frac{B_{ij}}{d_i}d_{\mathrm{med}}
+$$
+<p>
+随后进行 log transformation：
+</p>
+$$
+X^{\log}_{ij}
+=
+\log(1+\widetilde{X}_{ij})
+$$
+<p>
+对 \(X^{\log}\) 进行 PCA，取前 \(q\) 个主成分作为坐标空间：
+</p>
+$$
+X^{\log}
+\approx
+T_q P_q^\top,
+\qquad
+C^{\mathrm{PCA}} = T_q
+$$
+<p>
+其中 \(C^{\mathrm{PCA}}\in \mathbb{R}^{n\times q}\) 表示细胞在 PCA-logNorm 空间中的坐标。
+本报告分别使用 \(q=20,30,50\) 计算 batch mixing score。
+</p>
+<div class="table-title">表 10. PCA-logNorm 空间中不同 PCA 维度下的 normalized batch mixing score。</div><table>
+<thead>
+<tr>
+<th>PCA dimensions</th>
+<th>before</th>
+<th>after</th>
+<th>fold change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PC1:20</td>
+<td>0.0398</td>
+<td>0.2576</td>
+<td>6.48×</td>
+</tr>
+<tr>
+<td>PC1:30</td>
+<td>0.0510</td>
+<td>0.3097</td>
+<td>6.07×</td>
+</tr>
+<tr>
+<td>PC1:50</td>
+<td>0.0685</td>
+<td>0.4239</td>
+<td>6.19×</td>
+</tr>
+</tbody>
+</table>
+<h3>8.2 LSI 空间</h3>
+<p>
+LSI 空间来自 TF-IDF 矩阵的截断奇异值分解。设 TF-IDF 及 log scaling 后的矩阵为
+\(Z'\)，则：
+</p>
+$$
+Z'
+\approx
+U_r\Sigma_rV_r^\top,
+\qquad
+C^{\mathrm{LSI}}
+=
+U_r\Sigma_r
+$$
+<p>
+其中 \(C^{\mathrm{LSI}}\in \mathbb{R}^{n\times r}\) 表示细胞的 LSI 坐标。
+由于后文 QC 显示 \(LSI_1\) 与测序深度高度相关，本报告以
+\(LSI_2:LSI_{30}\) 作为主要 LSI-space batch mixing 评价空间。
+</p>
+<h3>8.3 UMAP 空间</h3>
+<p>
+UMAP 以 PCA-logNorm 或 LSI 等高维坐标为输入，先构建细胞间的近邻图，再优化二维坐标
+\(C^{\mathrm{UMAP}}\in \mathbb{R}^{n\times 2}\)，使低维空间尽可能保留高维空间的局部邻域结构：
+</p>
+$$
+C^{\mathrm{UMAP}}
+=
+\operatorname{UMAP}(C^{\mathrm{high}})
+$$
+<p>
+因此，UMAP-space score 反映的是二维可视化空间中的邻域混合情况。由于 UMAP 会重塑局部和全局几何结构，
+该指标只作为辅助说明，不作为最接近原文 normalized PCA mixing 的主指标。
+</p>
+<h3>8.4 三类空间中的共同 mixing score 计算</h3>
+<p>
+对任一坐标空间 \(C\)，先在该空间中计算每个细胞 \(i\) 的 \(k\)-nearest neighbors，
+记为 \(N_k(i)\)。设细胞 \(i\) 的 batch label 为 \(b_i\)，则细胞层面的 observed batch
+mixing score 为：
+</p>
+$$
+s_i(C)
+=
+\frac{1}{k}
+\sum_{j\in N_k(i)}
+\mathbf{1}(b_j\neq b_i)
+$$
+<p>
+数据层面的 observed score 为：
+</p>
+$$
+S_{\mathrm{obs}}(C)
+=
+\frac{1}{n}
+\sum_{i=1}^{n}
+s_i(C)
+$$
+<p>
+为控制 cell type composition 的影响，设 \(M=(m_{ab})\) 为 cell type-by-batch 计数矩阵，
+其中 \(m_{ab}\) 表示 cell type \(a\)、batch \(b\) 中的细胞数。给定 cell type 组成下，
+无 batch effect 时的期望不同 batch 邻居比例为：
+</p>
+$$
+S_{\mathrm{exp}}
+=
+\frac{1}{n}
+\sum_a\sum_b
+m_{ab}
+\left(
+\frac{\sum_{d\neq b}m_{ad}}{\sum_dm_{ad}}
+\right)
+$$
+<p>
+最终 normalized batch mixing score 定义为：
+</p>
+$$
+S_{\mathrm{norm}}(C)
+=
+\frac{S_{\mathrm{obs}}(C)}{S_{\mathrm{exp}}}
+$$
+<p>
+该指标越接近 1，表示在给定 cell type composition 后越接近随机 batch mixing；
+越接近 0，则表示 batch separation 越强。需要注意，batch mixing score 的提高应与
+cell-type preservation 指标共同解释，避免将真实生物学结构也一并消除。
+</p>
+<div class="table-title">表 11. PCA-logNorm、LSI 与 UMAP 空间中的 normalized batch mixing score 汇总。</div><table>
+<thead>
+<tr>
+<th>坐标空间</th>
+<th>before</th>
+<th>after</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PCA-logNorm PC1:30</td>
+<td>0.0510</td>
+<td>0.3097</td>
+<td>最接近原文 normalized PCA mixing 的主结果</td>
+</tr>
+<tr>
+<td>PCA-logNorm PC1:50</td>
+<td>0.0685</td>
+<td>0.4239</td>
+<td>PCA 维度敏感性结果</td>
+</tr>
+<tr>
+<td>LSI_2:30</td>
+<td>0.0520</td>
+<td>0.3343</td>
+<td>scATAC-aware supporting metric</td>
+</tr>
+<tr>
+<td>UMAP-space</td>
+<td>0.02649</td>
+<td>0.65073</td>
+<td>visualization-level auxiliary metric</td>
+</tr>
+</tbody>
+</table>
+<div class="figure fig-medium">
+<img alt="PCA/LSI/UMAP normalized batch mixing comparison" class="fig-small" src="materials/figures/gse157079_p56_10000_pca_lsi_umap_paper_style_score_comparison.png"/>
+<div class="fig-caption">
+    图 5. PCA-logNorm、LSI 与 UMAP 空间中的 normalized batch mixing score 对比。
+    三类坐标空间均显示 PACS filtering 后 batch mixing 明显改善。
+  </div>
+</div>
+<p>
+三类坐标空间均显示 after-filtering score 高于 before-filtering score。
+其中 PCA-logNorm 是最接近 PACS 原文 normalized PCA mixing 的主指标；
+LSI_2:30 是适合 scATAC-seq 稀疏矩阵的支持指标；UMAP-space 则用于说明二维可视化空间中的
+邻域混合变化。因此，PACS filtering 的效果不只是 UMAP visualization artifact，
+而是在 PCA-like 和 LSI 等高维表示空间中也得到支持。
+</p>
+<h2>9. LSI_1-Depth QC 与维度敏感性</h2>
+<p>
+在 scATAC-seq 的 TF-IDF/LSI 分析中，第一维 LSI component 常常与细胞测序深度或
+global accessibility 强相关。由于本报告需要在 LSI space 中计算 batch mixing score，
+因此有必要先检验 \(LSI_1\) 是否主要反映 depth/QC 轴。
+</p>
+<div class="table-title">表 12. LSI_1 与细胞 depth 的相关性 QC。</div><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>component</th>
+<th>Spearman(depth)</th>
+<th>Pearson(depth)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>before</td>
+<td>LSI_1</td>
+<td>-0.9983</td>
+<td>-0.9739</td>
+</tr>
+<tr>
+<td>after</td>
+<td>LSI_1</td>
+<td>0.9976</td>
+<td>0.9830</td>
+</tr>
+</tbody>
+</table>
+<div class="figure fig-medium">
+<img alt="LSI depth correlation QC" src="materials/figures/gse157079_p56_lsi_depth_correlation_before_after.png"/>
+<div class="fig-caption">
+    图 6. LSI components 与细胞 depth 的相关性。过滤前后 \(LSI_1\) 均与 depth 高度相关，
+    因此在 LSI-space batch mixing score 中排除 \(LSI_1\) 具有明确的 QC 依据。
+  </div>
+</div>
+<p>
+结果显示，过滤前 \(LSI_1\) 与 depth 的 Spearman 相关系数为 \(-0.9983\)，过滤后为
+\(0.9976\)，绝对值均接近 1。这说明 \(LSI_1\) 几乎完全由 depth/QC 相关信号主导。
+因此，本报告采用 \(LSI_2:LSI_{30}\) 作为主要 LSI-space mixing score 的计算空间，
+以降低测序深度轴对 batch mixing 评价的影响。
+</p>
+<div class="table-title">表 13. 不同 LSI 维度选择下的 normalized batch mixing score 敏感性分析。</div><table>
+<thead>
+<tr>
+<th>LSI 维度</th>
+<th>before</th>
+<th>after</th>
+<th>improvement</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LSI_1:30</td>
+<td>0.0576</td>
+<td>0.2803</td>
+<td>+0.2227</td>
+<td>包含 depth-dominated \(LSI_1\)，仍显示改善</td>
+</tr>
+<tr>
+<td>LSI_2:30</td>
+<td>0.0520</td>
+<td>0.3343</td>
+<td>+0.2823</td>
+<td>主 LSI 指标；排除 \(LSI_1\)</td>
+</tr>
+<tr>
+<td>LSI_2:50</td>
+<td>0.0793</td>
+<td>0.3730</td>
+<td>+0.2937</td>
+<td>更多 LSI 维度下结论保持一致</td>
+</tr>
+<tr>
+<td>LSI_1:50</td>
+<td>0.0766</td>
+<td>0.3088</td>
+<td>+0.2322</td>
+<td>包含 \(LSI_1\) 后改善幅度较低</td>
+</tr>
+</tbody>
+</table>
+<p>
+维度敏感性分析显示，无论是否包含 \(LSI_1\)，以及使用 30 维还是 50 维，
+PACS filtering 后的 normalized batch mixing score 均高于过滤前，说明
+batch mixing 改善并不依赖某一个特定的 LSI 维度选择。与此同时，排除 \(LSI_1\) 后的
+\(LSI_2:30\) 与 \(LSI_2:50\) 均给出更高的 improvement，分别为 \(+0.2823\) 和
+\(+0.2937\)，高于包含 \(LSI_1\) 的 \(LSI_1:30\) 与 \(LSI_1:50\)。这与前述 depth
+correlation QC 一致：\(LSI_1\) 主要反映测序深度相关变化，纳入该维度会削弱
+LSI-space mixing score 对 batch correction 效果的解释性。因此，后续主报告采用
+\(LSI_2:LSI_{30}\) 作为 scATAC-aware supporting metric。
+</p>
+<h2>10. GEO UMAP Reference 与 PCA-logNorm 参数稳定性</h2>
+<p>
+本节用于补充说明两类参考信息。首先，GEO precomputed UMAP 只能作为
+public atlas/reference embedding 在 UMAP-space 中进行比较，因为 GEO 文件提供的是二维
+UMAP 坐标，而不是 PCA 或 LSI 坐标。其次，为了使参数稳定性分析更接近 PACS 原文中的
+normalized PCA mixing，本节使用本项目重新计算的 PCA-logNorm space mixing score
+比较不同 PACS 参数设置。
+</p>
+<h3>10.1 GEO precomputed UMAP 的 UMAP-space reference</h3>
+<p>
+GEO precomputed UMAP 可能包含 atlas-level preprocessing、integration 或 correction steps，
+因此不应解释为 PACS-filtered ground truth。由于 GEO 公开文件只提供 UMAP 坐标，
+这里仅在 UMAP-space 中计算 normalized batch mixing score，用作可视化空间参考。
+</p>
+<div class="table-title">表 14. GEO precomputed UMAP 与 P56 PACS UMAP 的 UMAP-space reference score。</div><table>
+<thead>
+<tr>
+<th>setting</th>
+<th>coordinate space</th>
+<th>normalized score</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P56 10000/10000 before</td>
+<td>UMAP-space</td>
+<td>0.02649</td>
+<td>PACS filtering 前的二维 UMAP 邻域混合程度</td>
+</tr>
+<tr>
+<td>P56 10000/10000 after</td>
+<td>UMAP-space</td>
+<td>0.65073</td>
+<td>PACS filtering 后的二维 UMAP 邻域混合程度</td>
+</tr>
+<tr>
+<td>GEO P56 precomputed UMAP</td>
+<td>UMAP-space</td>
+<td>0.93903</td>
+<td>公开 atlas/reference embedding；不是 PACS-filtered ground truth</td>
+</tr>
+</tbody>
+</table>
+<p>
+在 UMAP-space 中，GEO P56 precomputed UMAP 的 normalized score 为 0.93903，
+高于本项目 P56 PACS-filtered UMAP 的 0.65073。这说明 GEO 预计算 embedding 的
+batch mixing 程度更高，但该结果可能反映了原 atlas-level processing 的综合效果。
+因此，GEO UMAP 适合用作公开参考坐标，而不能作为 PACS feature-filtering 的直接标准答案。
+</p>
+<h3>10.2 PCA-logNorm space 参数稳定性</h3>
+<p>
+为避免只依赖二维 UMAP 可视化指标，本项目进一步在 PCA-logNorm space 中比较不同
+PACS 参数设置下的 paper-style normalized batch mixing score。该分析使用已有的
+sparse count matrix、retained peak indices 与 metadata，不重新运行 PACS。由于该指标
+在 PCA-like space 中计算，因此比 UMAP-space 辅助指标更接近 PACS 原文中的
+normalized PCA mixing。
+</p>
+<div class="table-title">表 15. PCA-logNorm space 中不同 PACS 参数设置的 normalized batch mixing score。</div><table>
+<thead>
+<tr>
+<th>setting</th>
+<th>top peaks</th>
+<th>tested peaks</th>
+<th>significant peaks</th>
+<th>retained peaks</th>
+<th>PC1:30 before</th>
+<th>PC1:30 after</th>
+<th>PC1:50 before</th>
+<th>PC1:50 after</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5000 tested</td>
+<td>10000</td>
+<td>5000</td>
+<td>3140</td>
+<td>1860</td>
+<td>0.0510</td>
+<td>0.3679</td>
+<td>0.0685</td>
+<td>0.5032</td>
+</tr>
+<tr>
+<td>10000 tested</td>
+<td>10000</td>
+<td>10000</td>
+<td>6305</td>
+<td>3695</td>
+<td>0.0510</td>
+<td>0.3097</td>
+<td>0.0685</td>
+<td>0.4239</td>
+</tr>
+<tr>
+<td>20000 top / 10000 tested</td>
+<td>20000</td>
+<td>10000</td>
+<td>6208</td>
+<td>3792</td>
+<td>0.0398</td>
+<td>0.2928</td>
+<td>0.0556</td>
+<td>0.4097</td>
+</tr>
+</tbody>
+</table>
+<div class="figure fig-medium">
+<img alt="P56 PCA-logNorm parameter stability scores" src="materials/figures/gse157079_p56_pca_space_parameter_stability_scores_replot.png"/>
+<div class="fig-caption">
+    图 9. 不同 PACS 参数设置下的 PCA-logNorm paper-style normalized batch mixing score。
+    三组设置均显示 filtering 后 score 明显升高，说明 batch mixing 改善并不依赖单一参数选择。
+  </div>
+</div>
+<p>
+PCA-logNorm 参数稳定性分析显示，三组设置在 PC1:30 和 PC1:50 中均表现出稳定的
+before-to-after improvement。该结果说明，PACS filtering
+对 batch mixing 的改善不仅存在于 UMAP 可视化空间中，也存在于更接近原文
+normalized PCA mixing 的 PCA-logNorm space 中。
+</p>
+<p>
+需要注意的是，after score 最高并不必然代表该参数设置最优。5000 tested peaks 设置在
+PCA-logNorm space 中 after score 最高，但仅保留 1860 个 peaks，过滤更激进，
+可能更容易损失 biological accessibility features。10000 tested peaks 设置保留
+3695 个 peaks，并且此前在 cell-type preservation 指标中表现更平衡；20000 top /
+10000 tested 设置与 10000 tested peaks 设置结果接近，可作为扩大 feature universe 后的
+稳定性验证。因此，综合 batch mixing improvement、retained feature number 与
+cell-type structure preservation，本报告仍以 10000 top / 10000 tested / FDR 0.05
+作为当前主展示设置。
+</p>
+<p>
+综上，GEO precomputed UMAP 仅作为 UMAP-space reference；参数稳定性分析则以
+PCA-logNorm space 为主。二者回答的问题不同：前者说明公开 atlas embedding 的可视化混合程度，
+后者检验本项目 PACS feature-filtering workflow 在 PCA-like space 中的稳定性。
+</p>
+<h2>11. 当前复现亮点</h2>
+<ul>
+<li>PACS Notebook 1 主方法复现成功，Type I error 与 power 均处于合理范围。</li>
+<li>GSE157079 原始稀疏矩阵、metadata 与 peak list 已完成对齐验证。</li>
+<li>已从原始 cell-by-peak matrix 出发重建 all-cell TF-IDF/LSI/UMAP。</li>
+<li>P56 two-batch setting 中完成 cell-type-adjusted PACS batch-effect peak detection。</li>
+<li>P56 before/after UMAP 四联图形成 Fig.3a–d author-style reconstruction。</li>
+<li>PCA-logNorm、LSI-space 与 UMAP-space 三层定量指标均支持 PACS filtering 改善 batch mixing。</li>
+<li>LSI_1-depth QC 为使用 LSI_2:30 提供明确依据。</li>
+</ul>
+<h2>12. 局限性</h2>
+<div class="table-title">表 16. 当前复现工作的主要局限性。</div><table><thead><tr><th>局限性</th><th>含义</th><th>对结论的影响</th></tr></thead><tbody>
+<tr><td>P56-only two-batch subset</td><td>未覆盖 P0/P21/P56 全部细胞</td><td>结论限于 P56 batch filtering</td></tr>
+<tr><td>top10000 peaks</td><td>未测试全部 300755 peaks</td><td>当前为 top-peak proof of concept</td></tr>
+<tr><td>depth-derived cap_rates</td><td>缺少作者原始 q_vec</td><td>可能影响 PACS p-value calibration</td></tr>
+<tr><td>PCA-logNorm implementation</td><td>可能不同于作者内部 PCA preprocessing</td><td>不直接比较作者数值</td></tr>
+<tr><td>GEO UMAP reference</td><td>public atlas/reference embedding</td><td>不作为 PACS ground truth</td></tr>
+<tr><td>baseline helper missing</td><td>Notebook 1 baseline 为 clean-room 实现</td><td>不声称完整复现 baseline</td></tr>
+<tr><td>Fig.3e/f 未完成</td><td>尚未做 motif/gene-level extension</td><td>当前报告聚焦 Fig.3a–d</td></tr>
+</tbody></table>
+<h2>13. 下一步计划</h2>
+<h3>A. 继续完善 Fig.3a–d</h3>
+<ul>
+<li>审阅当前报告与图注。</li>
+<li>补充 figure copy 与 PDF 渲染。</li>
+<li>统一 UMAP panel size、legend 与字体。</li>
+<li>在不改变主结果的前提下，补充更清晰的 parameter comparison visualization。</li>
+</ul>
+<h3>B. 推进 Fig.3e/f</h3>
+<ul>
+<li>根据作者图内容确定是否涉及 DAR-linked genes、motif enrichment 或 gene activity。</li>
+<li>整理 peak annotation 与 motif database。</li>
+<li>在 P56 PACS-filtered peak set 基础上做 downstream enrichment。</li>
+<li>明确哪些部分可由当前公开数据支持，哪些需要额外 annotation 或作者参数。</li>
+</ul>
+<h2>附录 A：核心文件索引</h2>
+<ul>
+<li><code>results/current_important_results_summary.md</code></li>
+<li><code>results/20260526_2318_large_baseline/summary.csv</code></li>
+<li><code>results/mouse_kidney_figures/gse157079_matrix_alignment_smoke_test.md</code></li>
+<li><code>results/mouse_kidney_figures/gse157079_all_cells_top_peaks_lsi_umap/all_cells_top_peaks_lsi_umap_report.md</code></li>
+<li><code>results/mouse_kidney_figures/gse157079_p56_pacs_batch_filter_umap_p56_top10000_test10000_fdr005_lsi_saved/p56_pacs_batch_filter_umap_report.md</code></li>
+<li><code>results/mouse_kidney_figures/paper_style_batch_mixing_score_pca_space/p56_10000_pca_space_score_report.md</code></li>
+<li><code>results/mouse_kidney_figures/paper_style_batch_mixing_score_lsi_space/p56_paper_style_metric_final_interpretation.md</code></li>
+<li><code>results/mouse_kidney_figures/paper_style_batch_mixing_score_lsi_space/p56_lsi_depth_correlation_report.md</code></li>
+<li><code>results/mouse_kidney_figures/geo_precomputed_umap_quantification/geo_precomputed_umap_quantification_report.md</code></li>
+</ul>
+<h2>附录 B：AI 协作说明</h2>
+<p>本项目中 AI 协作主要用于阅读和整理已有脚本、结果表与报告，根据作者 notebook 逻辑辅助修复 PACS workflow，生成 GSE157079 数据接入、matrix-derived UMAP、P56 PACS filtering 与 batch mixing quantification 的阶段性总结。本报告中的数值均来自项目已有输出文件。</p>
+</body>
+</html>
