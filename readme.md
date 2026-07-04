@@ -1,4 +1,4 @@
-<img width="1491" height="1055" alt="image" src="https://github.com/user-attachments/assets/d35d3bed-11ba-499f-b54e-8bbc0a2051a4" /># PACS 论文复现项目
+# PACS 论文复现项目
 
 本仓库用于复现 PACS 论文中的关键分析流程，重点围绕 **scATAC-seq 中 batch-effect features 的检测、过滤与 UMAP 重建**。当前项目已经完成两个主要阶段：
 
@@ -6,6 +6,8 @@
 2. **GSE157079 mouse kidney reconstruction**：从公开 GSE157079 mouse kidney snATAC 数据出发，完成原始矩阵接入、matrix-derived UMAP、P56 子集 PACS batch-effect peak filtering 与 before/after UMAP 展示。
 
 当前结果应理解为 **P56 two-batch top10000 setting 下的 Fig.3a–d author-style reconstruction**，不是 PACS 原文 Fig.3 的 exact full reproduction。
+
+<img width="1491" height="1055" alt="image" src="https://github.com/user-attachments/assets/d35d3bed-11ba-499f-b54e-8bbc0a2051a4" />
 
 ## 项目定位
 
